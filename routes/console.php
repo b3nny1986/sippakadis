@@ -16,5 +16,3 @@ Artisan::command('inspire', function () {
 | dijalankan oleh `php artisan schedule:work` pada lingkungan non-Vercel.
 */
 Schedule::command('monitoring:daily')->daily()->at('22:30');
-
-Schedule::command('sinkronisasi:simpator --batch=100')->daily()->at('23:00');

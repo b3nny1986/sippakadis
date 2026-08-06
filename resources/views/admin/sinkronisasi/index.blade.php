@@ -15,11 +15,70 @@
             </div>
         </div>
 
-        <form method="POST" action="{{ route('admin.sinkronisasi.jalankan') }}" class="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm" onsubmit="this.querySelector('button').disabled = true; this.querySelector('button').textContent = 'Menjalankan...'">
+        <form method="POST" action="{{ route('admin.sinkronisasi.jalankan') }}" id="form-sinkronisasi-manual">
+            @csrf
+            <input type="hidden" name="manual" value="1">
+            <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-4 py-3">
+                    <div>
+                        <p class="text-sm font-semibold text-slate-800">Sinkronisasi Manual per NOPOL</p>
+                        <p class="text-xs text-slate-500">Centang satu atau beberapa kendaraan, lalu klik "Sinkronisasi Terpilih". Rata-rata ±1,2 detik per kendaraan; pilih secukupnya agar proses tidak lama.</p>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-3">
+                        <label class="flex cursor-pointer items-center gap-2 text-sm font-medium text-slate-700">
+                            <input type="checkbox" id="pilih-semua" class="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500">
+                            Pilih semua di halaman ini
+                        </label>
+                        <button type="submit" class="rounded-lg bg-brand-600 px-5 py-2 text-sm font-semibold text-white hover:bg-brand-700">Sinkronisasi Terpilih</button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-slate-200 text-sm">
+                        <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                            <tr>
+                                <th class="w-10 px-4 py-3"></th>
+                                <th class="px-4 py-3 text-left">NOPOL</th>
+                                <th class="px-4 py-3 text-left">OPD</th>
+                                <th class="px-4 py-3 text-left">Kendaraan</th>
+                                <th class="px-4 py-3 text-left">Status PKB / STNK</th>
+                                <th class="px-4 py-3 text-left">Diskrap</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            @forelse ($kendaraan as $k)
+                                <tr class="hover:bg-slate-50">
+                                    <td class="px-4 py-2.5">
+                                        <input type="checkbox" name="kendaraan_ids[]" value="{{ $k->id }}" class="cek-nopol h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500">
+                                    </td>
+                                    <td class="px-4 py-2.5 font-semibold text-brand-700">{{ $k->nopol }}</td>
+                                    <td class="px-4 py-2.5 text-slate-600">{{ $k->opd?->nama }}</td>
+                                    <td class="px-4 py-2.5 text-slate-600">
+                                        {{ $k->merk }} {{ $k->tipe }} <span class="text-slate-400">({{ $k->tahun ?? '-' }})</span>
+                                    </td>
+                                    <td class="px-4 py-2.5">
+                                        <span class="inline-flex gap-1">
+                                            <x-badge :value="$k->pkb_status">{{ $k->pkb_status }}</x-badge>
+                                            <x-badge :value="$k->stnk_status">{{ $k->stnk_status }}</x-badge>
+                                        </span>
+                                    </td>
+                                    <td class="px-4 py-2.5 text-slate-500">{{ $k->histori_scraping_count }}x</td>
+                                </tr>
+                            @empty
+                                <tr><td colspan="6" class="px-4 py-10 text-center text-slate-400">Tidak ada kendaraan dalam antrian sinkronisasi.</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+                <div class="border-t border-slate-100 px-4 py-3">{{ $kendaraan->links() }}</div>
+            </div>
+        </form>
+
+        <form method="POST" action="{{ route('admin.sinkronisasi.jalankan') }}" class="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm" onsubmit="this.querySelector('button').disabled = true; this.querySelector('button').textContent = 'Menjalankan...'">
             @csrf
             <div>
-                <p class="text-sm font-semibold text-slate-800">Sinkronisasi Massal</p>
-                <p class="text-xs text-slate-500">Proses {{ config('monitoring.simpator.batch') }} kendaraan per batch (prioritas yang belum pernah diskrap). Dapat memakan waktu beberapa menit.</p>
+                <p class="text-sm font-semibold text-slate-800">Sinkronisasi Massal (Batch)</p>
+                <p class="text-xs text-slate-500">Proses {{ config('monitoring.simpator.batch') }} kendaraan per batch otomatis (prioritas yang belum pernah diskrap). Dapat memakan waktu beberapa menit.</p>
             </div>
             <button type="submit" class="rounded-lg bg-brand-600 px-5 py-2 text-sm font-semibold text-white hover:bg-brand-700">Jalankan Sekarang</button>
         </form>
@@ -72,4 +131,31 @@
             <div class="border-t border-slate-100 px-4 py-3">{{ $logs->links() }}</div>
         </div>
     </div>
+
+    @push('scripts')
+    <script>
+        const pilihSemua = document.getElementById('pilih-semua');
+        const cekNopol = document.querySelectorAll('.cek-nopol');
+
+        if (pilihSemua) {
+            pilihSemua.addEventListener('change', () => {
+                cekNopol.forEach((c) => { c.checked = pilihSemua.checked; });
+            });
+        }
+
+        const formManual = document.getElementById('form-sinkronisasi-manual');
+        if (formManual) {
+            formManual.addEventListener('submit', (e) => {
+                const cek = formManual.querySelectorAll('.cek-nopol:checked');
+                if (!cek.length) {
+                    e.preventDefault();
+                    return;
+                }
+                const btn = formManual.querySelector('button[type=submit]');
+                btn.disabled = true;
+                btn.textContent = 'Sinkronisasi ' + cek.length + ' kendaraan...';
+            });
+        }
+    </script>
+    @endpush
 </x-layout>

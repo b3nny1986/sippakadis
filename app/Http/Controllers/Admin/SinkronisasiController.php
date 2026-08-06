@@ -26,8 +26,19 @@ class SinkronisasiController extends Controller
 
         $today = now()->toDateString();
 
+        $kendaraan = Kendaraan::query()
+            ->with(['opd', 'status'])
+            ->whereNotNull('nopol')
+            ->whereIn('sumber_data', [Kendaraan::SUMBER_CSV, Kendaraan::SUMBER_MANUAL])
+            ->withCount('historiScraping')
+            ->orderBy('histori_scraping_count')
+            ->orderBy('id')
+            ->paginate(100)
+            ->withQueryString();
+
         return view('admin.sinkronisasi.index', [
             'logs' => $logs,
+            'kendaraan' => $kendaraan,
             'riwayatHariIni' => LogSinkronisasi::whereDate('created_at', $today)->count(),
             'berhasilHariIni' => LogSinkronisasi::whereDate('created_at', $today)
                 ->where('status', LogSinkronisasi::DITEMUKAN)->count(),
@@ -39,17 +50,32 @@ class SinkronisasiController extends Controller
 
     public function jalankan(Request $request, SimpatorService $simpator, AuditLogService $audit): RedirectResponse
     {
-        $batch = (int) config('monitoring.simpator.batch', 100);
-
-        // Prioritaskan yang belum pernah diskrap (histori_scraping kosong) lalu id terkecil.
-        $kendaraan = Kendaraan::query()
+        $query = Kendaraan::query()
             ->whereNotNull('nopol')
             ->whereIn('sumber_data', [Kendaraan::SUMBER_CSV, Kendaraan::SUMBER_MANUAL])
-            ->withCount('historiScraping')
-            ->orderBy('histori_scraping_count')
-            ->orderBy('id')
-            ->limit($batch)
-            ->get();
+            ->withCount('historiScraping');
+
+        if ($request->boolean('manual')) {
+            $ids = $request->input('kendaraan_ids', []);
+
+            if (empty($ids)) {
+                return back()->with('error', 'Pilih minimal satu kendaraan terlebih dahulu.');
+            }
+
+            $kendaraan = $query
+                ->whereIn('id', array_values(array_map('intval', (array) $ids)))
+                ->orderBy('histori_scraping_count')
+                ->orderBy('id')
+                ->get();
+        } else {
+            $batch = (int) config('monitoring.simpator.batch', 100);
+
+            $kendaraan = $query
+                ->orderBy('histori_scraping_count')
+                ->orderBy('id')
+                ->limit($batch)
+                ->get();
+        }
 
         if ($kendaraan->isEmpty()) {
             return back()->with('info', 'Tidak ada kendaraan yang memerlukan sinkronisasi.');
@@ -67,14 +93,16 @@ class SinkronisasiController extends Controller
         }
 
         $audit->log('sinkronisasi.massal', 'Sinkronisasi', null, sprintf(
-            'Sinkronisasi massal: %d ditemukan, %d tidak ditemukan, %d gagal',
+            'Sinkronisasi %d kendaraan: %d ditemukan, %d tidak ditemukan, %d gagal',
+            $kendaraan->count(),
             $hasil[HistoriScraping::DITEMUKAN],
             $hasil[HistoriScraping::TIDAK_DITEMUKAN],
             $hasil[HistoriScraping::GAGAL]
         ));
 
         return back()->with('status', sprintf(
-            'Sinkronisasi selesai: %d ditemukan, %d tidak ditemukan, %d gagal.',
+            'Sinkronisasi %d kendaraan selesai: %d ditemukan, %d tidak ditemukan, %d gagal.',
+            $kendaraan->count(),
             $hasil[HistoriScraping::DITEMUKAN],
             $hasil[HistoriScraping::TIDAK_DITEMUKAN],
             $hasil[HistoriScraping::GAGAL]

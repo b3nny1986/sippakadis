@@ -71,7 +71,17 @@ class KendaraanController extends Controller
 
     public function update(KendaraanRequest $request, Kendaraan $kendaraan, AuditLogService $audit): RedirectResponse
     {
-        $kendaraan->update($request->validated());
+        $data = $request->validated();
+
+        if (array_key_exists('masa_berlaku_pkb', $data)) {
+            $data['pkb_status'] = Monitoring::status($data['masa_berlaku_pkb']);
+        }
+
+        if (array_key_exists('masa_berlaku_stnk', $data)) {
+            $data['stnk_status'] = Monitoring::status($data['masa_berlaku_stnk']);
+        }
+
+        $kendaraan->update($data);
 
         $audit->log('kendaraan.update', 'Kendaraan', $kendaraan->id, "Update kendaraan {$kendaraan->nopol}");
 
