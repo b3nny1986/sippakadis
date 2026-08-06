@@ -43,7 +43,7 @@ class KendaraanController extends Controller
         return view('kendaraan.index', [
             'kendaraan' => $query->latest('updated_at')->paginate(25)->withQueryString(),
             'daftarOpd' => Opd::orderBy('nama')->get(),
-            'daftarStatus' => StatusKendaraan::orderBy('urutan')->get(),
+            'daftarStatus' => StatusKendaraan::orderBy('id')->get(),
             'isAdmin' => auth()->user()->role?->slug === 'admin',
         ]);
     }
@@ -65,7 +65,7 @@ class KendaraanController extends Controller
     {
         return view('kendaraan.edit', [
             'kendaraan' => $kendaraan,
-            'daftarStatus' => StatusKendaraan::orderBy('urutan')->get(),
+            'daftarStatus' => StatusKendaraan::orderBy('id')->get(),
         ]);
     }
 

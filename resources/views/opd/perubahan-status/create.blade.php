@@ -24,7 +24,7 @@
                         <label class="mb-1 block text-sm font-medium text-slate-700">Status Baru</label>
                         <select name="status_baru_id" required class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none">
                             <option value="">-- Pilih Status Baru --</option>
-                            @foreach (\App\Models\StatusKendaraan::orderBy('urutan')->get() as $st)
+                            @foreach (\App\Models\StatusKendaraan::orderBy('id')->get() as $st)
                                 <option value="{{ $st->id }}" @selected(old('status_baru_id') == $st->id)>{{ $st->nama }}</option>
                             @endforeach
                         </select>
