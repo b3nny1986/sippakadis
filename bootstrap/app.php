@@ -18,6 +18,9 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Di belakang proxy (Vercel/nginx) agar HTTPS & IP terdeteksi benar.
         $middleware->trustProxies(at: '*');
+
+        // Endpoint internal /cron/daily dipanggil GitHub Actions dengan token Bearer (bukan form).
+        $middleware->validateCsrfTokens(except: ['cron/daily']);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
