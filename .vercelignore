@@ -1,0 +1,11 @@
+node_modules
+vendor
+storage
+.git
+.github
+.env
+.env.*
+!.env.example
+tests
+bootstrap/cache/*.php
+data_master_sippakadis.csv

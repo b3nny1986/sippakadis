@@ -1,0 +1,17 @@
+name: Cron Harian SIPPAKADIS
+
+on:
+  schedule:
+    # 22:00 UTC = 06:00 WITA (Asia/Makassar)
+    - cron: '0 22 * * *'
+  workflow_dispatch:
+
+jobs:
+  daily:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Panggil endpoint /cron/daily
+        run: |
+          curl -fsS -X POST "${{ secrets.PROD_URL }}/cron/daily" \
+            -H "Authorization: Bearer ${{ secrets.CRON_TOKEN }}" \
+            -H "Content-Type: application/json"
