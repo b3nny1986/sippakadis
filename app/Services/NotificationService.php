@@ -28,6 +28,15 @@ class NotificationService
      */
     public function jatuhTempo(Kendaraan $kendaraan, string $tipe, string $status): Notifikasi
     {
+        return Notifikasi::create($this->buildJatuhTempo($kendaraan, $tipe, $status));
+    }
+
+    /**
+     * Bangun atribut notifikasi jatuh tempo (termasuk timestamp).
+     * Dipakai untuk insert massal agar tidak mengeluarkan query per kendaraan.
+     */
+    public function buildJatuhTempo(Kendaraan $kendaraan, string $tipe, string $status): array
+    {
         $kategori = $status; // AMAN/H30/H14/H7/H1/HARI_H/LEWAT
         $judul = match ($tipe) {
             Notifikasi::TIPE_PKB => $this->judul($status, 'PKB'),
@@ -44,7 +53,9 @@ class NotificationService
             $this->deskripsiStatus($status, $tipe)
         );
 
-        return Notifikasi::create([
+        $now = now();
+
+        return [
             'opd_id' => $kendaraan->opd_id,
             'kendaraan_id' => $kendaraan->id,
             'tipe' => $tipe,
@@ -59,7 +70,9 @@ class NotificationService
             ],
             'channel' => Notifikasi::CHANNEL_DATABASE,
             'is_read' => false,
-        ]);
+            'created_at' => $now,
+            'updated_at' => $now,
+        ];
     }
 
     /**

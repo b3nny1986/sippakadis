@@ -65,10 +65,23 @@ class MonitoringService
         $count = ['pkb' => 0, 'stnk' => 0];
 
         $target = array_diff(Monitoring::statuses(), ['AMAN']);
+        $cutoff = now()->subDays((int) config('monitoring.notifikasi_min_interval_hari', 1));
+
+        $sudahSet = [];
+        $baru = [];
 
         Kendaraan::query()
             ->select(['id', 'opd_id', 'nopol', 'merk', 'tipe', 'masa_berlaku_pkb', 'masa_berlaku_stnk'])
-            ->chunkById(200, function ($chunk) use (&$count, $today, $target) {
+            ->chunkById(200, function ($chunk) use (&$sudahSet, &$baru, &$count, $today, $target, $cutoff) {
+                $ids = $chunk->pluck('id')->all();
+
+                Notifikasi::whereIn('kendaraan_id', $ids)
+                    ->where('created_at', '>=', $cutoff)
+                    ->get(['kendaraan_id', 'tipe', 'kategori'])
+                    ->each(function (Notifikasi $n) use (&$sudahSet) {
+                        $sudahSet[$n->kendaraan_id . ':' . $n->tipe . ':' . $n->kategori] = true;
+                    });
+
                 foreach ($chunk as $kendaraan) {
                     foreach (['PKB' => 'masa_berlaku_pkb', 'STNK' => 'masa_berlaku_stnk'] as $tipe => $kolom) {
                         $status = Monitoring::status($kendaraan->{$kolom}, $today);
@@ -77,15 +90,27 @@ class MonitoringService
                             continue;
                         }
 
-                        if ($this->notifications->sudahAdaBaruBaruIni($kendaraan, $tipe, $status)) {
+                        $key = $kendaraan->id . ':' . $tipe . ':' . $status;
+
+                        if (isset($sudahSet[$key])) {
                             continue;
                         }
 
-                        $this->notifications->jatuhTempo($kendaraan, $tipe, $status);
+                        $sudahSet[$key] = true;
                         $count[strtolower($tipe)]++;
+                        $baru[] = ['kendaraan' => $kendaraan, 'tipe' => $tipe, 'status' => $status];
                     }
                 }
             });
+
+        if ($baru !== []) {
+            DB::table('notifikasi')->insert(collect($baru)->map(function (array $b) {
+                $data = $this->notifications->buildJatuhTempo($b['kendaraan'], $b['tipe'], $b['status']);
+                $data['data'] = json_encode($data['data'], JSON_UNESCAPED_UNICODE);
+
+                return $data;
+            })->all());
+        }
 
         return $count;
     }
