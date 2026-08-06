@@ -4,6 +4,11 @@
       "runtime": "vercel-php@0.8.0"
     }
   },
+  "framework": null,
+  "buildCommand": null,
+  "devCommand": null,
+  "installCommand": null,
+  "outputDirectory": null,
   "routes": [
     { "handle": "filesystem" },
     { "src": "/(.*)", "dest": "/api/index.php" }
