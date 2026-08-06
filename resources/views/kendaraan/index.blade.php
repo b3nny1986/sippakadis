@@ -74,15 +74,23 @@
                                 <x-badge>{{ $k->status?->nama }}</x-badge>
                             </td>
                             <td class="px-4 py-3">
-                                <div class="flex items-center gap-2">
-                                    <x-badge :value="$k->pkb_status">{{ $k->pkb_status }}</x-badge>
-                                    <span class="text-xs text-slate-500">{{ $k->masa_berlaku_pkb?->format('d-m-Y') ?? '-' }}</span>
+                                <div class="flex flex-col gap-1">
+                                    <div class="flex items-center gap-2">
+                                        <x-badge :value="$k->pkb_status">{{ $k->pkb_status }}</x-badge>
+                                        <span class="text-xs text-slate-500">{{ $k->masa_berlaku_pkb?->format('d-m-Y') ?? '-' }}</span>
+                                    </div>
+                                    @php $ketPkb = \App\Support\Monitoring::keterangan($k->masa_berlaku_pkb); @endphp
+                                    <span class="text-xs {{ $ketPkb['warna'] }}">{{ $ketPkb['teks'] }}</span>
                                 </div>
                             </td>
                             <td class="px-4 py-3">
-                                <div class="flex items-center gap-2">
-                                    <x-badge :value="$k->stnk_status">{{ $k->stnk_status }}</x-badge>
-                                    <span class="text-xs text-slate-500">{{ $k->masa_berlaku_stnk?->format('d-m-Y') ?? '-' }}</span>
+                                <div class="flex flex-col gap-1">
+                                    <div class="flex items-center gap-2">
+                                        <x-badge :value="$k->stnk_status">{{ $k->stnk_status }}</x-badge>
+                                        <span class="text-xs text-slate-500">{{ $k->masa_berlaku_stnk?->format('d-m-Y') ?? '-' }}</span>
+                                    </div>
+                                    @php $ketStnk = \App\Support\Monitoring::keterangan($k->masa_berlaku_stnk); @endphp
+                                    <span class="text-xs {{ $ketStnk['warna'] }}">{{ $ketStnk['teks'] }}</span>
                                 </div>
                             </td>
                             <td class="px-4 py-3 text-right">

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Support\Monitoring;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -142,5 +143,50 @@ class Kendaraan extends Model
         $kolom = $tipe === 'stnk' ? 'stnk_status' : 'pkb_status';
 
         return $query->where($kolom, $status);
+    }
+
+    /**
+     * Pencocokan live terhadap satu kolom masa berlaku untuk sebuah status.
+     * Tidak bergantung pada kolom pkb_status/stnk_status tersimpan.
+     */
+    public function scopeJatuhTempoKolum(Builder $query, string $kolom, string $status, ?CarbonImmutable $today = null): Builder
+    {
+        $today ??= CarbonImmutable::today();
+        $range = Monitoring::dateRange($status, $today);
+        $from = $range['from'];
+        $to = $range['to'];
+
+        if ($status === 'AMAN') {
+            return $query->where(function (Builder $sub) use ($kolom, $from) {
+                $sub->whereNull($kolom)->orWhere($kolom, '>=', $from);
+            });
+        }
+
+        if ($from === null) {
+            return $query->whereNotNull($kolom)->where($kolom, '<=', $to);
+        }
+
+        if ($to === null) {
+            return $query->where($kolom, '>=', $from);
+        }
+
+        return $query->whereBetween($kolom, [$from, $to]);
+    }
+
+    /**
+     * Kendaraan yang masuk sebuah status monitoring (live, PKB ATAU STNK).
+     * Konsisten dengan filter status_monitoring pada halaman /kendaraan.
+     */
+    public function scopeJatuhTempo(Builder $query, string $status, ?CarbonImmutable $today = null): Builder
+    {
+        $today ??= CarbonImmutable::today();
+
+        return $query->where(function (Builder $q) use ($status, $today) {
+            $q->where(function (Builder $sub) use ($status, $today) {
+                $sub->jatuhTempoKolum('masa_berlaku_pkb', $status, $today);
+            })->orWhere(function (Builder $sub) use ($status, $today) {
+                $sub->jatuhTempoKolum('masa_berlaku_stnk', $status, $today);
+            });
+        });
     }
 }

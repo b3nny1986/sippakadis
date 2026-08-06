@@ -16,6 +16,62 @@
             <x-kpi label="Total OPD" :value="$ringkasan['total_opd']" icon="building" tone="brand" />
         </div>
 
+        {{-- Rekap Jatuh Tempo (klik kartu -> daftar kendaraan) --}}
+        <x-card title="Rekap Jatuh Tempo (PKB & STNK)">
+            <div class="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
+                @php
+                    $kartuRekap = [
+                        'LEWAT' => ['label' => 'Lewat Jatuh Tempo', 'border' => 'border-red-500',   'bg' => 'bg-red-50',     'num' => 'text-red-600',     'sub' => 'text-red-600'],
+                        'HARI_H' => ['label' => 'Jatuh Tempo Hari Ini (H)', 'border' => 'border-orange-500', 'bg' => 'bg-orange-50', 'num' => 'text-orange-600', 'sub' => 'text-orange-600'],
+                        'H1'   => ['label' => 'H-1',   'border' => 'border-amber-400', 'bg' => 'bg-amber-50',  'num' => 'text-amber-600', 'sub' => 'text-amber-600'],
+                        'H7'   => ['label' => 'H-7',   'border' => 'border-yellow-400', 'bg' => 'bg-yellow-50', 'num' => 'text-yellow-600','sub' => 'text-yellow-700'],
+                        'H14'  => ['label' => 'H-14',  'border' => 'border-sky-400',    'bg' => 'bg-sky-50',     'num' => 'text-sky-600',   'sub' => 'text-sky-600'],
+                        'H30'  => ['label' => 'H-30',  'border' => 'border-blue-400',   'bg' => 'bg-blue-50',    'num' => 'text-blue-600',  'sub' => 'text-blue-600'],
+                    ];
+                @endphp
+                @foreach ($kartuRekap as $status => $c)
+                    @php $r = $rekapMonitoring[$status] ?? ['total' => 0, 'pkb' => 0, 'stnk' => 0]; @endphp
+                    <a href="{{ route('kendaraan.index', ['status_monitoring' => $status]) }}"
+                       class="group rounded-2xl border-l-4 {{ $c['border'] }} {{ $c['bg'] }} p-4 shadow-sm transition hover:shadow-md">
+                        <div class="text-3xl font-bold {{ $c['num'] }}">{{ $r['total'] }}</div>
+                        <div class="mt-1 text-sm font-semibold text-slate-700">{{ $c['label'] }}</div>
+                        <div class="mt-1 text-xs {{ $c['sub'] }}">PKB {{ $r['pkb'] }} · STNK {{ $r['stnk'] }}</div>
+                    </a>
+                @endforeach
+            </div>
+        </x-card>
+
+        {{-- Rekap per OPD (klik baris -> daftar kendaraan) --}}
+        <x-card title="Rekap Kendaraan per OPD">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-slate-200 text-sm">
+                    <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                        <tr>
+                            <th class="px-4 py-3 text-left">OPD</th>
+                            <th class="px-4 py-3 text-right">Total Kendaraan</th>
+                            <th class="px-4 py-3 text-right">Lewat Jatuh Tempo</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        @forelse ($rekapPerOpd as $o)
+                            <tr class="transition hover:bg-slate-50">
+                                <td class="px-4 py-3">
+                                    <a href="{{ route('kendaraan.index', ['opd_id' => $o['id']]) }}"
+                                       class="font-medium text-brand-700 hover:underline">{{ $o['nama'] }}</a>
+                                </td>
+                                <td class="px-4 py-3 text-right font-semibold text-slate-700">{{ $o['total'] }}</td>
+                                <td class="px-4 py-3 text-right {{ $o['lewat'] > 0 ? 'font-semibold text-red-600' : 'text-slate-400' }}">{{ $o['lewat'] }}</td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="3" class="px-4 py-8 text-center text-slate-400">Tidak ada OPD.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </x-card>
+
         <div class="grid gap-6 lg:grid-cols-3">
             {{-- Doughnut status --}}
             <x-card title="Kendaraan per Status">

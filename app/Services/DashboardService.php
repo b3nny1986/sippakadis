@@ -238,21 +238,81 @@ class DashboardService
         return ['labels' => $labels, 'data' => $data];
     }
 
+    /**
+     * Rekap jatuh tempo gabungan PKB & STNK per status.
+     *
+     * Jumlah per status dihitung dengan logika OR (pkb_status = X ATAU
+     * stnk_status = X) agar konsisten dengan filter status_monitoring pada
+     * halaman /kendaraan — jumlah di kartu selalu sama dengan baris daftar.
+     *
+     * @return array<string, array{total:int, pkb:int, stnk:int}>
+     */
+    public function rekapMonitoring(?int $opdId = null): array
+    {
+        $statuses = ['LEWAT', 'HARI_H', 'H1', 'H7', 'H14', 'H30'];
+        $byPkb = $this->hitungMonitoring('pkb', $opdId);
+        $byStnk = $this->hitungMonitoring('stnk', $opdId);
+
+        $rekap = [];
+
+        foreach ($statuses as $status) {
+            $jumlah = Kendaraan::query()
+                ->tap(fn ($q) => $this->scopeOpd($q, $opdId))
+                ->jatuhTempo($status)
+                ->count();
+
+            $rekap[$status] = [
+                'total' => (int) $jumlah,
+                'pkb' => (int) ($byPkb[$status] ?? 0),
+                'stnk' => (int) ($byStnk[$status] ?? 0),
+            ];
+        }
+
+        return $rekap;
+    }
+
+    /**
+     * Rekap per OPD: total kendaraan dan jumlah yang lewat jatuh tempo.
+     * Untuk role OPD hanya berisi OPD-nya sendiri.
+     *
+     * @return array<int, array{id:int, nama:string, total:int, lewat:int}>
+     */
+    public function rekapPerOpd(?int $opdId = null): array
+    {
+        return Opd::query()
+            ->when($opdId, fn ($q) => $q->where('id', $opdId))
+            ->where('is_active', true)
+            ->withCount('kendaraan')
+            ->withCount(['kendaraan as lewat_count' => fn ($q) => $q
+                ->where(fn ($s) => $s->where('pkb_status', 'LEWAT')->orWhere('stnk_status', 'LEWAT'))])
+            ->orderByDesc('kendaraan_count')
+            ->get()
+            ->map(fn (Opd $o) => [
+                'id' => $o->id,
+                'nama' => $o->nama,
+                'total' => $o->kendaraan_count,
+                'lewat' => $o->lewat_count,
+            ])
+            ->toArray();
+    }
+
     /* ------------------------------------------------------------------ */
     /* Internal                                                            */
     /* ------------------------------------------------------------------ */
 
     private function hitungMonitoring(string $tipe, ?int $opdId): array
     {
-        $kolom = $tipe === 'stnk' ? 'stnk_status' : 'pkb_status';
+        $kolom = $tipe === 'stnk' ? 'masa_berlaku_stnk' : 'masa_berlaku_pkb';
+        $out = [];
 
-        return Kendaraan::query()
-            ->tap(fn ($q) => $this->scopeOpd($q, $opdId))
-            ->selectRaw("{$kolom} as status, count(*) as jumlah")
-            ->groupBy($kolom)
-            ->pluck('jumlah', 'status')
-            ->mapWithKeys(fn ($j, $s) => [$s ?: 'AMAN' => (int) $j])
-            ->toArray();
+        foreach (Monitoring::statuses() as $status) {
+            $out[$status] = Kendaraan::query()
+                ->tap(fn ($q) => $this->scopeOpd($q, $opdId))
+                ->jatuhTempoKolum($kolom, $status)
+                ->count();
+        }
+
+        return $out;
     }
 
     private function scopeOpd($query, ?int $opdId): void

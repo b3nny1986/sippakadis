@@ -34,11 +34,7 @@ class KendaraanController extends Controller
                         ->orWhere('tipe', 'ilike', "%{$term}%");
                 });
             })
-            ->when($request->filled('status_monitoring'), function ($q) use ($request) {
-                $status = $request->string('status_monitoring');
-                $q->where(fn ($sub) => $sub->where('pkb_status', $status)
-                    ->orWhere('stnk_status', $status));
-            });
+            ->when($request->filled('status_monitoring'), fn ($q) => $q->jatuhTempo($request->string('status_monitoring')));
 
         return view('kendaraan.index', [
             'kendaraan' => $query->latest('updated_at')->paginate(25)->withQueryString(),
