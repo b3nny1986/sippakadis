@@ -1,66 +1,89 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# SIPPAKADIS
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+**Sistem Pemantauan Pajak Kendaraan Dinas** — memantau jatuh tempo PKB & STNK kendaraan dinas di lingkungan Pemerintah Daerah.
 
-## About Laravel
+## Link & Akun Uji Coba
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+| | |
+|---|---|
+| Produksi | https://sipakadis.vercel.app |
+| Email | `admin@sippakadis.test` |
+| Password | `password` |
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Fitur Utama
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- **Dashboard & Monitoring** — status jatuh tempo PKB/STNK (LEWAT, HARI_H, H1, H7, H14, H30, AMAN), notifikasi otomatis per kendaraan/OPD.
+- **Data Kendaraan** — daftar, filter (OPD/status/monitoring), detail, dan **edit manual** Masa Berlaku PKB/STNK. Status dihitung ulang otomatis saat disimpan.
+- **Sinkronisasi Simpator (manual)** — scraping data pajak dari Simpator Bapenda Kaltim:
+  - **Manual per NOPOL**: centang kendaraan lalu "Sinkronisasi Terpilih" (ada juga "Pilih semua di halaman ini").
+  - **Massal batch**: "Jalankan Sekarang" memproses 100 kendaraan (prioritas yang belum pernah diskrap).
+- **Cron harian** — menghitung ulang seluruh status + membangun notifikasi (tanpa scraping Simpator).
+- **Peran & Workflow** — Admin dan OPD (pengajuan penetapan, perubahan status, verifikasi).
 
-## Learning Laravel
+## Teknologi
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+- Laravel 12, Blade + Tailwind CSS 4, PostgreSQL (Supabase)
+- Hosting: Vercel (vercel-php) + GitHub Actions
+- Koneksi DB produksi via **Supavisor pooler IPv4** (host `aws-0-ap-southeast-1.pooler.supabase.com`)
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+## Menjalankan Lokal
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+```bash
+composer install
+cp .env.example .env        # isi DB_* dengan koneksi Supabase (pooler)
+php artisan key:generate
+php artisan migrate --seed  # migrasi + data awal
+php artisan serve
+```
 
-## Laravel Sponsors
+Buka `http://127.0.0.1:8000`.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## Deploy ke Vercel
 
-### Premium Partners
+1. Fork/push repo ke GitHub.
+2. Buat project Vercel dari repo (framework: **Other**; `vercel.json` sudah berisi konfigurasi `builds` vercel-php).
+3. Set **Environment Variables** (production):
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+   ```
+   APP_KEY             = base64:...   # php artisan key:generate --show
+   APP_DEBUG           = false
+   APP_URL             = https://<nama-project>.vercel.app
+   DB_CONNECTION       = pgsql
+   DB_HOST             = aws-0-ap-southeast-1.pooler.supabase.com
+   DB_PORT             = 5432
+   DB_DATABASE         = postgres
+   DB_USERNAME         = postgres.<ref>      # dari Supabase > Connect > Pooler
+   DB_PASSWORD         = <password>
+   DB_SSLMODE          = require
+   CRON_TOKEN          = <string acak>
+   ```
 
-## Contributing
+4. Deploy otomatis setiap push ke `main` via `.github/workflows/deploy.yml`. Secret GitHub yang dibutuhkan: `VERCEL_TOKEN`, `PROD_URL`, `CRON_TOKEN`.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+> Catatan: host Supabase direct (`db.*.supabase.co`) kadang **IPv6-only** sehingga tidak bisa diakses Lambda Vercel (IPv4-only). Gunakan **pooler Supavisor** (IPv4) pada koneksi produksi & lokal.
 
-## Code of Conduct
+## Cron Harian
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Tidak ada cron OS di Vercel, sehingga scheduler dieksekusi lewat endpoint yang dipanggil GitHub Actions setiap hari (`.github/workflows/cron-daily.yml`):
 
-## Security Vulnerabilities
+```bash
+curl -X POST https://sipakadis.vercel.app/cron/daily \
+  -H "Authorization: Bearer <CRON_TOKEN>"
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Menghitung ulang seluruh status (≈1961 kendaraan) dalam ±25 detik. Jadwal scheduler lokal tercatat di `routes/console.php` (22:30 WITA).
 
-## License
+## Struktur Penting
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+```
+app/Http/Controllers/CronController.php     # endpoint cron (status + notifikasi)
+app/Services/MonitoringService.php          # hitungSemuaStatus + bangunNotifikasi
+app/Services/SimpatorService.php            # scraping Simpator (manual)
+app/Http/Controllers/Admin/SinkronisasiController.php  # sync manual per NOPOL / batch
+config/monitoring.php                       # ambang status, konfigurasi Simpator
+routes/console.php                          # jadwal scheduler
+```
+
+## Lisensi
+
+Proyek internal Pemerintah Daerah.
