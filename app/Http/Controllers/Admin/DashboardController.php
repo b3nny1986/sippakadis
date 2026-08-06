@@ -12,8 +12,9 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
 
-        // OPD hanya melihat data unitnya sendiri.
-        $scopeOpd = $user->role?->slug === 'opd' ? $user->opd_id : null;
+        // OPD hanya melihat data unitnya sendiri. Pengunjung (tanpa login)
+        // melihat seluruh data dan diperlakukan bukan admin.
+        $scopeOpd = $user?->role?->slug === 'opd' ? $user->opd_id : null;
 
         return view('dashboard', [
             'ringkasan' => $service->ringkasan($scopeOpd),
@@ -25,7 +26,7 @@ class DashboardController extends Controller
             'rekapPengajuan' => $service->rekapPengajuan($scopeOpd),
             'rekapPenetapan' => $service->rekapPenetapan($scopeOpd, 6),
             'statistikPembayaran' => $service->statistikPembayaran($scopeOpd),
-            'isAdmin' => $user->role?->slug === 'admin',
+            'isAdmin' => (bool) ($user?->role?->slug === 'admin'),
         ]);
     }
 }

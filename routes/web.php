@@ -37,15 +37,18 @@ Route::post('cron/daily', [CronController::class, 'daily'])->name('cron.daily');
 
 /*
 |--------------------------------------------------------------------------
+| Halaman publik: Dashboard bisa dilihat tanpa login (menu login di header)
+|--------------------------------------------------------------------------
+*/
+Route::get('/', fn () => redirect()->route('dashboard'))->name('home');
+Route::get('dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+
+/*
+|--------------------------------------------------------------------------
 | Area terautentikasi
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'user.active'])->group(function () {
-    Route::get('/', fn () => redirect()->route('dashboard'))->name('home');
-
-    // Dashboard (Admin & OPD)
-    Route::get('dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
-
     // Notifikasi
     Route::get('notifikasi', [NotifikasiController::class, 'index'])->name('notifikasi.index');
     Route::post('notifikasi/{notifikasi}/read', [NotifikasiController::class, 'markRead'])->name('notifikasi.read');

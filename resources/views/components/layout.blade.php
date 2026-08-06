@@ -3,10 +3,12 @@
 @php
     $user = auth()->user();
     $isAdmin = $user?->role?->slug === 'admin';
-    $belumDibaca = $belumDibaca ?? \App\Models\Notifikasi::query()
-        ->when($user?->role?->slug === 'opd', fn ($q) => $q->forOpd($user->opd_id))
-        ->unread()
-        ->count();
+    $belumDibaca = $user
+        ? \App\Models\Notifikasi::query()
+            ->when($user->role?->slug === 'opd', fn ($q) => $q->forOpd($user->opd_id))
+            ->unread()
+            ->count()
+        : 0;
 @endphp
 
 <!DOCTYPE html>
@@ -42,11 +44,13 @@
                     Dashboard
                 </x-nav-link>
 
-                <x-nav-link :href="route('kendaraan.index')" :active="request()->routeIs('kendaraan.*')" icon="car">
-                    Kendaraan
-                </x-nav-link>
+                @if ($user)
+                    <x-nav-link :href="route('kendaraan.index')" :active="request()->routeIs('kendaraan.*')" icon="car">
+                        Kendaraan
+                    </x-nav-link>
+                @endif
 
-                @if ($isAdmin)
+                @if ($user && $isAdmin)
                     <p class="px-3 pt-5 pb-2 text-[11px] font-semibold uppercase tracking-wider text-brand-400">Administrasi</p>
                     <x-nav-link :href="route('admin.users.index')" :active="request()->routeIs('admin.users.*')" icon="users">Pengguna</x-nav-link>
                     <x-nav-link :href="route('admin.opd.index')" :active="request()->routeIs('admin.opd.*')" icon="building">OPD</x-nav-link>
@@ -56,25 +60,34 @@
                     <x-nav-link :href="route('admin.laporan.index')" :active="request()->routeIs('admin.laporan.*')" icon="report">Laporan</x-nav-link>
                     <x-nav-link :href="route('admin.audit-log.index')" :active="request()->routeIs('admin.audit-log.*')" icon="shield">Audit Log</x-nav-link>
                 @else
-                    <p class="px-3 pt-5 pb-2 text-[11px] font-semibold uppercase tracking-wider text-brand-400">Layanan OPD</p>
-                    <x-nav-link :href="route('opd.pengajuan.index')" :active="request()->routeIs('opd.pengajuan.*')" icon="document">Pengajuan</x-nav-link>
-                    <x-nav-link :href="route('opd.perubahan-status.create')" :active="request()->routeIs('opd.perubahan-status.*')" icon="refresh">Perubahan Status</x-nav-link>
+                    @if ($user)
+                        <p class="px-3 pt-5 pb-2 text-[11px] font-semibold uppercase tracking-wider text-brand-400">Layanan OPD</p>
+                        <x-nav-link :href="route('opd.pengajuan.index')" :active="request()->routeIs('opd.pengajuan.*')" icon="document">Pengajuan</x-nav-link>
+                        <x-nav-link :href="route('opd.perubahan-status.create')" :active="request()->routeIs('opd.perubahan-status.*')" icon="refresh">Perubahan Status</x-nav-link>
+                    @endif
                 @endif
             </nav>
 
             <div class="absolute inset-x-0 bottom-0 border-t border-brand-800 p-4">
-                <div class="flex items-center justify-between gap-2 text-sm">
-                    <div class="min-w-0">
-                        <p class="truncate font-semibold">{{ $user?->name }}</p>
-                        <p class="truncate text-[11px] text-brand-300">{{ $user?->opd?->nama ?? $user?->role?->nama }}</p>
+                @if ($user)
+                    <div class="flex items-center justify-between gap-2 text-sm">
+                        <div class="min-w-0">
+                            <p class="truncate font-semibold">{{ $user->name }}</p>
+                            <p class="truncate text-[11px] text-brand-300">{{ $user->opd?->nama ?? $user->role?->nama }}</p>
+                        </div>
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit" class="rounded-lg p-2 text-brand-300 transition hover:bg-brand-800 hover:text-white" title="Keluar">
+                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                            </button>
+                        </form>
                     </div>
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <button type="submit" class="rounded-lg p-2 text-brand-300 transition hover:bg-brand-800 hover:text-white" title="Keluar">
-                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
-                        </button>
-                    </form>
-                </div>
+                @else
+                    <a href="{{ route('login') }}" class="flex items-center justify-center gap-2 rounded-lg bg-accent-400 px-4 py-2 text-sm font-semibold text-brand-900 transition hover:bg-accent-300">
+                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h2"/></svg>
+                        Login Admin / OPD
+                    </a>
+                @endif
             </div>
         </div>
 
@@ -96,14 +109,20 @@
                 <h1 class="truncate text-lg font-bold text-slate-900">{{ $title }}</h1>
 
                 <div class="ml-auto flex items-center gap-2">
-                    <a href="{{ route('notifikasi.index') }}" class="relative rounded-lg p-2 text-slate-500 transition hover:bg-slate-100" title="Notifikasi">
-                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
-                        @if ($belumDibaca > 0)
-                            <span class="absolute -top-0.5 -right-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[11px] font-bold text-white">
-                                {{ $belumDibaca }}
-                            </span>
-                        @endif
-                    </a>
+                    @if ($user)
+                        <a href="{{ route('notifikasi.index') }}" class="relative rounded-lg p-2 text-slate-500 transition hover:bg-slate-100" title="Notifikasi">
+                            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                            @if ($belumDibaca > 0)
+                                <span class="absolute -top-0.5 -right-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[11px] font-bold text-white">
+                                    {{ $belumDibaca }}
+                                </span>
+                            @endif
+                        </a>
+                    @else
+                        <a href="{{ route('login') }}" class="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700">
+                            Login
+                        </a>
+                    @endif
                 </div>
             </header>
 
