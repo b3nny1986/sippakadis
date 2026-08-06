@@ -9,6 +9,8 @@ use App\Models\StatusKendaraan;
 use App\Support\Monitoring;
 use Carbon\CarbonImmutable;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -18,29 +20,84 @@ use Illuminate\Support\Facades\DB;
 class DashboardService
 {
     /**
+     * Kunci cache dashboard di-generate dari versi global; naikkan versi lewat
+     * buangCache() (dipanggil observer saat data kendaraan/OPD berubah) sehingga
+     * semua scope (semua OPD) ikut ter-invalidasi sekaligus.
+     */
+    private const TTL_MENIT = 5;
+
+    /**
+     * Seluruh agregasi dashboard dalam satu paket ter-cache.
+     * Pada cache hit hanya 2 kueri (baca versi + baca paket).
+     *
+     * @return array<string, mixed>
+     */
+    public function dataDashboard(?int $opdId = null): array
+    {
+        $scope = $opdId ? "opd:{$opdId}" : 'semua';
+        $versi = (int) Cache::get('dashboard:v', 1);
+        $key = "dashboard:v{$versi}:{$scope}";
+
+        return Cache::remember($key, now()->addMinutes(self::TTL_MENIT), function () use ($opdId) {
+            return [
+                'ringkasan' => $this->ringkasan($opdId),
+                'rekapMonitoring' => $this->rekapMonitoring($opdId),
+                'rekapStatus' => $this->rekapStatus($opdId),
+                'rekapPerOpd' => $this->rekapPerOpd($opdId),
+                'perStatus' => $this->kendaraanPerStatus($opdId),
+                'perOpd' => $this->kendaraanPerOpd($opdId),
+                'rekapJatuhTempo' => $this->rekapJatuhTempo($opdId),
+                'rekapPengajuan' => $this->rekapPengajuan($opdId),
+                'rekapPenetapan' => $this->rekapPenetapan($opdId, 6),
+                'statistikPembayaran' => $this->statistikPembayaran($opdId),
+            ];
+        });
+    }
+
+    /**
+     * Invalidasi cache dashboard (semua scope) dengan menaikkan versi.
+     *
+     * Dipakai put (bukan increment) karena DatabaseStore mengembalikan false
+     * ketika kunci belum ada; put selalu menulis versi baru sehingga semua
+     * paket dengan versi lama otomatis tidak terbaca lagi.
+     */
+    public static function buangCache(): void
+    {
+        $versi = (int) Cache::get('dashboard:v', 0) + 1;
+
+        Cache::put('dashboard:v', $versi, now()->addDay());
+    }
+
+    /**
      * Ringkasan kartu KPI.
      */
     public function ringkasan(?int $opdId = null): array
     {
-        $kendaraan = Kendaraan::query()->tap(fn ($q) => $this->scopeOpd($q, $opdId));
+        $statusAll = StatusKendaraan::all(['id', 'kode', 'nama']);
+        $statusKodeId = $statusAll->pluck('id', 'kode');
+        $statusLabels = $statusAll->pluck('nama', 'id');
 
-        $totalKendaraan = (clone $kendaraan)->count();
-        $menungguVerifikasi = (clone $kendaraan)->menungguVerifikasi()->count();
+        $rows = $this->ambilBarisMonitoring($opdId);
 
-        $statusCounts = (clone $kendaraan)
-            ->selectRaw('status_id, count(*) as jumlah')
-            ->groupBy('status_id')
-            ->pluck('jumlah', 'status_id');
+        $totalKendaraan = $rows->count();
+        $menungguVerifikasi = $rows->where('is_verifikasi', false)->count();
+        $statusCounts = $rows->countBy('status_id');
 
-        $statusLabels = StatusKendaraan::pluck('nama', 'id');
+        $hitungStatus = function (array $kode) use ($statusKodeId, $statusCounts): int {
+            $total = 0;
 
-        $hitungStatus = fn (array $kode) => $statusCounts
-            ->only(
-                StatusKendaraan::whereIn('kode', $kode)->pluck('id')
-            )
-            ->sum();
+            foreach ($kode as $k) {
+                $id = $statusKodeId[$k] ?? null;
 
-        $byPkb = $this->hitungMonitoring('pkb', $opdId);
+                if ($id !== null) {
+                    $total += (int) ($statusCounts[$id] ?? 0);
+                }
+            }
+
+            return $total;
+        };
+
+        $monitoring = $this->bucketMonitoring($rows);
 
         $pengajuanMenunggu = PengajuanPenetapan::query()
             ->when($opdId, fn ($q) => $q->where('opd_id', $opdId))
@@ -58,15 +115,15 @@ class DashboardService
             'kendaraan_lelang' => $hitungStatus(['lelang']),
             'menunggu_verifikasi' => $menungguVerifikasi,
             'pengajuan_menunggu' => $pengajuanMenunggu,
-            'pkb_h30' => $byPkb['H30'] ?? 0,
-            'pkb_h14' => $byPkb['H14'] ?? 0,
-            'pkb_h7' => $byPkb['H7'] ?? 0,
-            'pkb_h1' => $byPkb['H1'] ?? 0,
-            'pkb_harin_h' => $byPkb['HARI_H'] ?? 0,
-            'pkb_lewat' => $byPkb['LEWAT'] ?? 0,
-            'stnk_lewat' => $this->hitungMonitoring('stnk', $opdId)['LEWAT'] ?? 0,
+            'pkb_h30' => $monitoring['byPkb']['H30'] ?? 0,
+            'pkb_h14' => $monitoring['byPkb']['H14'] ?? 0,
+            'pkb_h7' => $monitoring['byPkb']['H7'] ?? 0,
+            'pkb_h1' => $monitoring['byPkb']['H1'] ?? 0,
+            'pkb_harin_h' => $monitoring['byPkb']['HARI_H'] ?? 0,
+            'pkb_lewat' => $monitoring['byPkb']['LEWAT'] ?? 0,
+            'stnk_lewat' => $monitoring['byStnk']['LEWAT'] ?? 0,
             'status_labels' => $statusLabels,
-            'status_aktif_id' => StatusKendaraan::where('kode', 'aktif')->value('id'),
+            'status_aktif_id' => $statusKodeId['aktif'] ?? null,
         ];
     }
 
@@ -265,21 +322,15 @@ class DashboardService
     public function rekapMonitoring(?int $opdId = null): array
     {
         $statuses = ['LEWAT', 'HARI_H', 'H1', 'H7', 'H14', 'H30'];
-        $byPkb = $this->hitungMonitoring('pkb', $opdId);
-        $byStnk = $this->hitungMonitoring('stnk', $opdId);
+        $monitoring = $this->bucketMonitoring($this->ambilBarisMonitoring($opdId));
 
         $rekap = [];
 
         foreach ($statuses as $status) {
-            $jumlah = Kendaraan::query()
-                ->tap(fn ($q) => $this->scopeOpd($q, $opdId))
-                ->jatuhTempo($status)
-                ->count();
-
             $rekap[$status] = [
-                'total' => (int) $jumlah,
-                'pkb' => (int) ($byPkb[$status] ?? 0),
-                'stnk' => (int) ($byStnk[$status] ?? 0),
+                'total' => (int) ($monitoring['total'][$status] ?? 0),
+                'pkb' => (int) ($monitoring['byPkb'][$status] ?? 0),
+                'stnk' => (int) ($monitoring['byStnk'][$status] ?? 0),
             ];
         }
 
@@ -305,19 +356,45 @@ class DashboardService
     /* Internal                                                            */
     /* ------------------------------------------------------------------ */
 
-    private function hitungMonitoring(string $tipe, ?int $opdId): array
+    /**
+     * Ambil kolom yang dibutuhkan untuk agregasi monitoring dalam satu kueri.
+     */
+    private function ambilBarisMonitoring(?int $opdId): Collection
     {
-        $kolom = $tipe === 'stnk' ? 'masa_berlaku_stnk' : 'masa_berlaku_pkb';
-        $out = [];
+        return Kendaraan::query()
+            ->tap(fn ($q) => $this->scopeOpd($q, $opdId))
+            ->select(['status_id', 'is_verifikasi', 'masa_berlaku_pkb', 'masa_berlaku_stnk'])
+            ->get();
+    }
 
-        foreach (Monitoring::statuses() as $status) {
-            $out[$status] = Kendaraan::query()
-                ->tap(fn ($q) => $this->scopeOpd($q, $opdId))
-                ->jatuhTempoKolum($kolom, $status)
-                ->count();
+    /**
+     * Hitung bucket status monitoring (PKB/STNK) dan total OR dari baris yang
+     * sudah diambil. Logikanya identik dengan scope jatuhTempo()/jatuhTempoKolum():
+     * sebuah kendaraan masuk status X bila pkb_status = X ATAU stnk_status = X.
+     */
+    private function bucketMonitoring(Collection $rows, ?CarbonImmutable $today = null): array
+    {
+        $today ??= CarbonImmutable::today();
+        $statuses = Monitoring::statuses();
+
+        $byPkb = array_fill_keys($statuses, 0);
+        $byStnk = array_fill_keys($statuses, 0);
+        $total = array_fill_keys($statuses, 0);
+
+        foreach ($rows as $k) {
+            $pk = Monitoring::status($k->masa_berlaku_pkb, $today);
+            $sk = Monitoring::status($k->masa_berlaku_stnk, $today);
+
+            $byPkb[$pk]++;
+            $byStnk[$sk]++;
+            $total[$pk]++;
+
+            if ($sk !== $pk) {
+                $total[$sk]++;
+            }
         }
 
-        return $out;
+        return compact('byPkb', 'byStnk', 'total');
     }
 
     private function scopeOpd($query, ?int $opdId): void
