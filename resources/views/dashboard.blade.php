@@ -118,18 +118,6 @@
             </div>
         </x-card>
 
-        <div class="grid gap-6 lg:grid-cols-3">
-            {{-- Doughnut status --}}
-            <x-card title="Kendaraan per Status">
-                <canvas id="chart-status" class="max-h-72"></canvas>
-            </x-card>
-
-            {{-- Bar per OPD --}}
-            <x-card title="Kendaraan per OPD" class="lg:col-span-2">
-                <canvas id="chart-opd" class="max-h-72"></canvas>
-            </x-card>
-        </div>
-
         <div class="grid gap-6 lg:grid-cols-2">
             {{-- Line jatuh tempo --}}
             <x-card title="Jatuh Tempo 12 Bulan ke Depan">
@@ -152,26 +140,6 @@
     @push('scripts')
         <script>
             function initCharts(root) {
-                const status = @json($perStatus);
-                new Chart(document.getElementById('chart-status'), {
-                    type: 'doughnut',
-                    data: {
-                        labels: status.labels,
-                        datasets: [{ data: status.data, borderWidth: 2 }],
-                    },
-                    options: { plugins: { legend: { position: 'right' } } },
-                });
-
-                const opd = @json($perOpd);
-                new Chart(document.getElementById('chart-opd'), {
-                    type: 'bar',
-                    data: {
-                        labels: opd.labels,
-                        datasets: [{ label: 'Kendaraan', data: opd.data, backgroundColor: '#2563eb' }],
-                    },
-                    options: { scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }, plugins: { legend: { display: false } } },
-                });
-
                 const jt = @json($rekapJatuhTempo);
                 new Chart(document.getElementById('chart-jatuh-tempo'), {
                     type: 'line',

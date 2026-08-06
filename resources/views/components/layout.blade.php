@@ -20,13 +20,13 @@
     <title>{{ $title }} - SIPPAKADIS</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="h-full font-sans antialiased text-slate-800" x-data="{ sidebar: false }">
+<body class="h-full font-sans antialiased text-slate-800" x-data="{ sidebar: false, sidebarCollapsed: false }">
 
     <div class="flex min-h-full">
         {{-- Sidebar --}}
         <div
             class="fixed inset-y-0 left-0 z-40 w-64 -translate-x-full bg-brand-900 text-brand-50 transition-transform lg:static lg:translate-x-0"
-            :class="sidebar ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'"
+            :class="[sidebar ? 'translate-x-0' : '-translate-x-full lg:translate-x-0', sidebarCollapsed ? 'lg:hidden' : '']"
             x-cloak
         >
             <div class="flex h-16 items-center gap-3 border-b border-brand-800 px-5">
@@ -56,18 +56,19 @@
                     <x-nav-link :href="route('admin.perubahan-status.index')" :active="request()->routeIs('admin.perubahan-status.*')" icon="refresh">Perubahan Status</x-nav-link>
                     <x-nav-link :href="route('admin.sinkronisasi.index')" :active="request()->routeIs('admin.sinkronisasi.*')" icon="sync">Sinkronisasi</x-nav-link>
                     <x-nav-link :href="route('admin.laporan.index')" :active="request()->routeIs('admin.laporan.*')" icon="report">Laporan</x-nav-link>
-                    <x-nav-link :href="route('admin.audit-log.index')" :active="request()->routeIs('admin.audit-log.*')" icon="shield">Audit Log</x-nav-link>
+                    <x-nav-link :href="route('admin.log.index')" :active="request()->routeIs('admin.log.*')" icon="shield">Log</x-nav-link>
+                @elseif ($user)
+                    <p class="px-3 pt-5 pb-2 text-[11px] font-semibold uppercase tracking-wider text-brand-400">Layanan OPD</p>
+                    <x-nav-link :href="route('opd.pengajuan.index')" :active="request()->routeIs('opd.pengajuan.*')" icon="document">Pengajuan</x-nav-link>
+                    <x-nav-link :href="route('opd.perubahan-status.create')" :active="request()->routeIs('opd.perubahan-status.*')" icon="refresh">Perubahan Status</x-nav-link>
                 @else
-                    @if ($user)
-                        <p class="px-3 pt-5 pb-2 text-[11px] font-semibold uppercase tracking-wider text-brand-400">Layanan OPD</p>
-                        <x-nav-link :href="route('opd.pengajuan.index')" :active="request()->routeIs('opd.pengajuan.*')" icon="document">Pengajuan</x-nav-link>
-                        <x-nav-link :href="route('opd.perubahan-status.create')" :active="request()->routeIs('opd.perubahan-status.*')" icon="refresh">Perubahan Status</x-nav-link>
-                    @endif
+                    <p class="px-3 pt-5 pb-2 text-[11px] font-semibold uppercase tracking-wider text-brand-400">Masuk</p>
+                    <x-nav-link :href="route('login')" :active="request()->routeIs('login')" icon="login">Login Admin / OPD</x-nav-link>
                 @endif
             </nav>
 
-            <div class="absolute inset-x-0 bottom-0 border-t border-brand-800 p-4">
-                @if ($user)
+            @if ($user)
+                <div class="absolute inset-x-0 bottom-0 border-t border-brand-800 p-4">
                     <div class="flex items-center justify-between gap-2 text-sm">
                         <div class="min-w-0">
                             <p class="truncate font-semibold">{{ $user->name }}</p>
@@ -80,13 +81,8 @@
                             </button>
                         </form>
                     </div>
-                @else
-                    <a href="{{ route('login') }}" class="flex items-center justify-center gap-2 rounded-lg bg-accent-400 px-4 py-2 text-sm font-semibold text-brand-900 transition hover:bg-accent-300">
-                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h2"/></svg>
-                        Login Admin / OPD
-                    </a>
-                @endif
-            </div>
+                </div>
+            @endif
         </div>
 
         {{-- Overlay mobile --}}
@@ -104,6 +100,13 @@
                     <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
                 </button>
 
+                <button type="button" class="hidden rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 lg:inline-flex" @click="sidebarCollapsed = !sidebarCollapsed" aria-label="Buka/tutup sidebar" title="Buka/tutup sidebar">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path x-show="!sidebarCollapsed" stroke-linecap="round" stroke-linejoin="round" d="M11 17l-5-5 5-5M18 17l-5-5 5-5"></path>
+                        <path x-show="sidebarCollapsed" stroke-linecap="round" stroke-linejoin="round" d="M7 17l5-5-5-5M14 17l5-5-5-5"></path>
+                    </svg>
+                </button>
+
                 <h1 class="truncate text-lg font-bold text-slate-900">{{ $title }}</h1>
 
                 <div class="ml-auto flex items-center gap-2">
@@ -115,10 +118,6 @@
                                     {{ $belumDibaca }}
                                 </span>
                             @endif
-                        </a>
-                    @else
-                        <a href="{{ route('login') }}" class="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700">
-                            Login
                         </a>
                     @endif
                 </div>

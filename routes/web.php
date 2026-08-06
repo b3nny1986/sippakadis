@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\KendaraanController as AdminKendaraanController;
 use App\Http\Controllers\Admin\LaporanController;
+use App\Http\Controllers\Admin\LogController;
 use App\Http\Controllers\Admin\OpdController;
 use App\Http\Controllers\Admin\PenetapanController;
 use App\Http\Controllers\Admin\PerubahanStatusController as AdminPerubahanStatusController;
@@ -98,6 +99,9 @@ Route::middleware(['auth', 'user.active'])->group(function () {
 
         // Audit log
         Route::get('audit-log', [AuditLogController::class, 'index'])->name('audit-log.index');
+
+        // Log gabungan (audit + aktivitas pengguna)
+        Route::get('log', [LogController::class, 'index'])->name('log.index');
     });
 
     /*

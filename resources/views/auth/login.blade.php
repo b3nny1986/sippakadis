@@ -50,6 +50,10 @@
                 </button>
             </form>
         </div>
+
+        <a href="{{ route('dashboard') }}" class="mt-5 block text-center text-sm font-medium text-brand-300 transition hover:text-white">
+            &larr; Kembali ke dashboard
+        </a>
     </div>
 </body>
 </html>
