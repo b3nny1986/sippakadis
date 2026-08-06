@@ -56,11 +56,11 @@
                         @forelse ($rekapPerOpd as $o)
                             <tr class="transition hover:bg-slate-50">
                                 <td class="px-4 py-3">
-                                    <a href="{{ route('kendaraan.index', ['opd_id' => $o['id']]) }}"
-                                       class="font-medium text-brand-700 hover:underline">{{ $o['nama'] }}</a>
+                                    <a href="{{ route('kendaraan.index', ['opd_id' => $o->id]) }}"
+                                       class="font-medium text-brand-700 hover:underline">{{ $o->nama }}</a>
                                 </td>
-                                <td class="px-4 py-3 text-right font-semibold text-slate-700">{{ $o['total'] }}</td>
-                                <td class="px-4 py-3 text-right {{ $o['lewat'] > 0 ? 'font-semibold text-red-600' : 'text-slate-400' }}">{{ $o['lewat'] }}</td>
+                                <td class="px-4 py-3 text-right font-semibold text-slate-700">{{ $o->kendaraan_count }}</td>
+                                <td class="px-4 py-3 text-right {{ $o->lewat_count > 0 ? 'font-semibold text-red-600' : 'text-slate-400' }}">{{ $o->lewat_count }}</td>
                             </tr>
                         @empty
                             <tr>
@@ -69,6 +69,10 @@
                         @endforelse
                     </tbody>
                 </table>
+            </div>
+
+            <div class="mt-4 border-t border-slate-100 pt-3">
+                {{ $rekapPerOpd->links() }}
             </div>
         </x-card>
 

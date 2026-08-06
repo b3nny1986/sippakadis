@@ -8,6 +8,7 @@ use App\Models\PengajuanPenetapan;
 use App\Models\StatusKendaraan;
 use App\Support\Monitoring;
 use Carbon\CarbonImmutable;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -272,28 +273,18 @@ class DashboardService
     }
 
     /**
-     * Rekap per OPD: total kendaraan dan jumlah yang lewat jatuh tempo.
-     * Untuk role OPD hanya berisi OPD-nya sendiri.
-     *
-     * @return array<int, array{id:int, nama:string, total:int, lewat:int}>
+     * Rekap per OPD (ter-paginasi): total kendaraan dan jumlah yang lewat
+     * jatuh tempo. Untuk role OPD hanya berisi OPD-nya sendiri.
      */
-    public function rekapPerOpd(?int $opdId = null): array
+    public function rekapPerOpd(?int $opdId = null, int $perPage = 15): LengthAwarePaginator
     {
         return Opd::query()
             ->when($opdId, fn ($q) => $q->where('id', $opdId))
             ->where('is_active', true)
             ->withCount('kendaraan')
-            ->withCount(['kendaraan as lewat_count' => fn ($q) => $q
-                ->where(fn ($s) => $s->where('pkb_status', 'LEWAT')->orWhere('stnk_status', 'LEWAT'))])
+            ->withCount(['kendaraan as lewat_count' => fn ($q) => $q->jatuhTempo('LEWAT')])
             ->orderByDesc('kendaraan_count')
-            ->get()
-            ->map(fn (Opd $o) => [
-                'id' => $o->id,
-                'nama' => $o->nama,
-                'total' => $o->kendaraan_count,
-                'lewat' => $o->lewat_count,
-            ])
-            ->toArray();
+            ->paginate($perPage);
     }
 
     /* ------------------------------------------------------------------ */
