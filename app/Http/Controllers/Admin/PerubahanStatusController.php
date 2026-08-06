@@ -16,7 +16,7 @@ class PerubahanStatusController extends Controller
         $perubahan = PerubahanStatus::query()
             ->with(['kendaraan', 'statusLama', 'statusBaru', 'diajukanOleh'])
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')))
-            ->when($request->filled('cari'), fn ($q) => $q->whereHas('kendaraan', fn ($k) => $k->where('nopol', 'ilike', '%' . $request->string('cari') . '%')))
+            ->when($request->filled('cari'), fn ($q) => $q->whereHas('kendaraan', fn ($k) => $k->cariNopol((string) $request->string('cari'))))
             ->latest()
             ->paginate(20)
             ->withQueryString();

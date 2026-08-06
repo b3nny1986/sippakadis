@@ -19,7 +19,7 @@ class PenetapanController extends Controller
             ->with(['kendaraan', 'opd', 'diajukanOleh'])
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')))
             ->when($request->filled('tahun'), fn ($q) => $q->where('tahun_pajak', $request->integer('tahun')))
-            ->when($request->filled('cari'), fn ($q) => $q->whereHas('kendaraan', fn ($k) => $k->where('nopol', 'ilike', '%' . $request->string('cari') . '%')))
+            ->when($request->filled('cari'), fn ($q) => $q->whereHas('kendaraan', fn ($k) => $k->cariNopol((string) $request->string('cari'))))
             ->latest()
             ->paginate(20)
             ->withQueryString();

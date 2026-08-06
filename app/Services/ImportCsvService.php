@@ -54,7 +54,9 @@ class ImportCsvService
                 $result['total']++;
 
                 try {
-                    $nopol = NopolParser::normalize($row['NO POLISI'] ?? '');
+                    // Nopol disimpan sesuai format data master (dash/spasi
+                    // dipertahankan) agar cocok saat dicek ulang di Simpator.
+                    $nopol = NopolParser::display($row['NO POLISI'] ?? '');
 
                     if ($nopol === '' || $nopol === '0') {
                         $result['skipped']++;

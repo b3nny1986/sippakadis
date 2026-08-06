@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Support\Monitoring;
+use App\Support\NopolParser;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -136,6 +137,21 @@ class Kendaraan extends Model
     public function scopeMenungguVerifikasi(Builder $query): Builder
     {
         return $query->where('is_verifikasi', false);
+    }
+
+    /**
+     * Pencocokan nopol yang mengabaikan spasi, tanda hubung, dan titik.
+     * Contoh: "KTV- 1058", "KTV  1058", dan "KTV1058" dianggap sama.
+     */
+    public function scopeCariNopol(Builder $query, string $term, string $kolom = 'nopol'): Builder
+    {
+        $clean = NopolParser::normalize($term);
+
+        if ($clean === '') {
+            return $query;
+        }
+
+        return $query->whereRaw("regexp_replace({$kolom}, '[\\s\\-.]+', '', 'g') ilike ?", ["%{$clean}%"]);
     }
 
     public function scopeStatusMonitoring(Builder $query, string $tipe, string $status): Builder

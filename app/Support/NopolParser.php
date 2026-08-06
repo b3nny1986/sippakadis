@@ -26,6 +26,15 @@ final class NopolParser
     }
 
     /**
+     * Bentuk tampilan sesuai data master: uppercase, trim, spasi berlebih
+     * dirapatkan, namun karakter '-'/'.' dipertahankan (mis. "KTV- 1058").
+     */
+    public static function display(string $nopol): string
+    {
+        return mb_strtoupper((string) preg_replace('/\s+/', ' ', trim($nopol)));
+    }
+
+    /**
      * Ambil kode wilayah (2 huruf pertama, default "KT").
      */
     public static function wilayah(string $nopol): string

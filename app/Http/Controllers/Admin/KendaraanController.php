@@ -32,9 +32,11 @@ class KendaraanController extends Controller
             ->when($request->filled('cari'), function ($q) use ($request) {
                 $term = trim($request->string('cari'));
                 $q->where(function ($sub) use ($term) {
-                    $sub->where('nopol', 'ilike', "%{$term}%")
-                        ->orWhere('nopol_lama', 'ilike', "%{$term}%")
-                        ->orWhere('merk', 'ilike', "%{$term}%")
+                    $sub->where(function ($n) use ($term) {
+                        $n->cariNopol($term)->orWhere(function ($l) use ($term) {
+                            $l->cariNopol($term, 'nopol_lama');
+                        });
+                    })->orWhere('merk', 'ilike', "%{$term}%")
                         ->orWhere('tipe', 'ilike', "%{$term}%");
                 });
             })

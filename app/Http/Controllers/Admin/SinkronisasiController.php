@@ -19,7 +19,13 @@ class SinkronisasiController extends Controller
         $logs = LogSinkronisasi::query()
             ->with('dijalankanOleh')
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')))
-            ->when($request->filled('cari'), fn ($q) => $q->where('nopol', 'ilike', '%' . $request->string('cari') . '%'))
+            ->when($request->filled('cari'), function ($q) use ($request) {
+                $clean = \App\Support\NopolParser::normalize((string) $request->string('cari'));
+
+                if ($clean !== '') {
+                    $q->whereRaw("regexp_replace(nopol, '[\\s\\-.]+', '', 'g') ilike ?", ["%{$clean}%"]);
+                }
+            })
             ->latest()
             ->paginate(20)
             ->withQueryString();
