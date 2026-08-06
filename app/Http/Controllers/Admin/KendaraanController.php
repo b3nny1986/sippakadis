@@ -18,13 +18,17 @@ class KendaraanController extends Controller
 {
     public function index(Request $request): View
     {
+        $user = auth()->user();
+        $isOpd = $user?->role?->slug === 'opd';
+
         $query = Kendaraan::query()
             ->with(['opd', 'status', 'jenis'])
-            ->when(auth()->user()->role?->slug === 'opd', fn ($q) => $q->forOpd(auth()->user()->opd_id));
+            ->when($isOpd, fn ($q) => $q->forOpd($user->opd_id));
 
         $query->when($request->filled('opd_id'), fn ($q) => $q->where('opd_id', $request->integer('opd_id')))
             ->when($request->filled('status_id'), fn ($q) => $q->where('status_id', $request->integer('status_id')))
             ->when($request->filled('jenis_id'), fn ($q) => $q->where('jenis_id', $request->integer('jenis_id')))
+            ->when($request->boolean('verifikasi'), fn ($q) => $q->menungguVerifikasi())
             ->when($request->filled('cari'), function ($q) use ($request) {
                 $term = trim($request->string('cari'));
                 $q->where(function ($sub) use ($term) {
@@ -40,7 +44,8 @@ class KendaraanController extends Controller
             'kendaraan' => $query->latest('updated_at')->paginate(25)->withQueryString(),
             'daftarOpd' => Opd::orderBy('nama')->get(),
             'daftarStatus' => StatusKendaraan::orderBy('id')->get(),
-            'isAdmin' => auth()->user()->role?->slug === 'admin',
+            'isAdmin' => (bool) ($user?->role?->slug === 'admin'),
+            'isOpd' => $isOpd,
         ]);
     }
 

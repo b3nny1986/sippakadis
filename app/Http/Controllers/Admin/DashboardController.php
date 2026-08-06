@@ -19,6 +19,7 @@ class DashboardController extends Controller
         return view('dashboard', [
             'ringkasan' => $service->ringkasan($scopeOpd),
             'rekapMonitoring' => $service->rekapMonitoring($scopeOpd),
+            'rekapStatus' => $service->rekapStatus($scopeOpd),
             'rekapPerOpd' => $service->rekapPerOpd($scopeOpd),
             'perStatus' => $service->kendaraanPerStatus($scopeOpd),
             'perOpd' => $service->kendaraanPerOpd($scopeOpd),

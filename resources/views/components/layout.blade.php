@@ -44,11 +44,9 @@
                     Dashboard
                 </x-nav-link>
 
-                @if ($user)
-                    <x-nav-link :href="route('kendaraan.index')" :active="request()->routeIs('kendaraan.*')" icon="car">
-                        Kendaraan
-                    </x-nav-link>
-                @endif
+                <x-nav-link :href="route('kendaraan.index')" :active="request()->routeIs('kendaraan.*')" icon="car">
+                    Kendaraan
+                </x-nav-link>
 
                 @if ($user && $isAdmin)
                     <p class="px-3 pt-5 pb-2 text-[11px] font-semibold uppercase tracking-wider text-brand-400">Administrasi</p>

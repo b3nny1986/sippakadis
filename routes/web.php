@@ -43,6 +43,9 @@ Route::post('cron/daily', [CronController::class, 'daily'])->name('cron.daily');
 Route::get('/', fn () => redirect()->route('dashboard'))->name('home');
 Route::get('dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
+// Daftar kendaraan publik (rekap dashboard tanpa login). Detail butuh login.
+Route::get('kendaraan', [AdminKendaraanController::class, 'index'])->name('kendaraan.index');
+
 /*
 |--------------------------------------------------------------------------
 | Area terautentikasi
@@ -53,8 +56,7 @@ Route::middleware(['auth', 'user.active'])->group(function () {
     Route::get('notifikasi', [NotifikasiController::class, 'index'])->name('notifikasi.index');
     Route::post('notifikasi/{notifikasi}/read', [NotifikasiController::class, 'markRead'])->name('notifikasi.read');
 
-    // Kendaraan: semua role bisa melihat (OPD di-scope otomatis)
-    Route::get('kendaraan', [AdminKendaraanController::class, 'index'])->name('kendaraan.index');
+    // Detail kendaraan butuh login (OPD melihat detail, ajukan status & penetapan)
     Route::get('kendaraan/{kendaraan}', [AdminKendaraanController::class, 'show'])->name('kendaraan.show');
 
     /*

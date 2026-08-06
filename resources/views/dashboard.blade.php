@@ -1,20 +1,62 @@
 <x-layout title="Dashboard">
     <div class="space-y-6" x-data="{}" x-init="initCharts($el)">
 
-        {{-- Kartu KPI --}}
+        {{-- Kartu KPI (klik -> daftar kendaraan) --}}
         <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
-            <x-kpi label="Total Kendaraan" :value="$ringkasan['total_kendaraan']" icon="car" />
-            <x-kpi label="Kendaraan Aktif" :value="$ringkasan['kendaraan_aktif']" icon="check" tone="emerald" />
-            <x-kpi label="PKB Lewat" :value="$ringkasan['pkb_lewat']" icon="alert" tone="red" />
-            <x-kpi label="STNK Lewat" :value="$ringkasan['stnk_lewat']" icon="alert" tone="red" />
+            <a href="{{ route('kendaraan.index') }}" class="block transition hover:opacity-90">
+                <x-kpi label="Total Kendaraan" :value="$ringkasan['total_kendaraan']" icon="car" />
+            </a>
+            <a href="{{ route('kendaraan.index', ['status_id' => $ringkasan['status_aktif_id']]) }}" class="block transition hover:opacity-90">
+                <x-kpi label="Kendaraan Aktif" :value="$ringkasan['kendaraan_aktif']" icon="check" tone="emerald" />
+            </a>
+            <a href="{{ route('kendaraan.index', ['status_monitoring' => 'LEWAT']) }}" class="block transition hover:opacity-90">
+                <x-kpi label="PKB Lewat" :value="$ringkasan['pkb_lewat']" icon="alert" tone="red" />
+            </a>
+            <a href="{{ route('kendaraan.index', ['status_monitoring' => 'LEWAT']) }}" class="block transition hover:opacity-90">
+                <x-kpi label="STNK Lewat" :value="$ringkasan['stnk_lewat']" icon="alert" tone="red" />
+            </a>
         </div>
 
         <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
-            <x-kpi label="PKB H-7 ke Bawah" :value="$ringkasan['pkb_h7'] + $ringkasan['pkb_h1'] + $ringkasan['pkb_harin_h']" icon="clock" tone="amber" />
-            <x-kpi label="Menunggu Verifikasi" :value="$ringkasan['menunggu_verifikasi']" icon="shield" tone="amber" />
-            <x-kpi label="Pengajuan Menunggu" :value="$ringkasan['pengajuan_menunggu']" icon="document" tone="sky" />
+            <a href="{{ route('kendaraan.index', ['status_monitoring' => 'H7']) }}" class="block transition hover:opacity-90">
+                <x-kpi label="PKB H-7 ke Bawah" :value="$ringkasan['pkb_h7'] + $ringkasan['pkb_h1'] + $ringkasan['pkb_harin_h']" icon="clock" tone="amber" />
+            </a>
+            <a href="{{ route('kendaraan.index', ['verifikasi' => 1]) }}" class="block transition hover:opacity-90">
+                <x-kpi label="Menunggu Verifikasi" :value="$ringkasan['menunggu_verifikasi']" icon="shield" tone="amber" />
+            </a>
+            <a href="{{ route('admin.penetapan.index') }}" class="block transition hover:opacity-90">
+                <x-kpi label="Pengajuan Menunggu" :value="$ringkasan['pengajuan_menunggu']" icon="document" tone="sky" />
+            </a>
             <x-kpi label="Total OPD" :value="$ringkasan['total_opd']" icon="building" tone="brand" />
         </div>
+
+        {{-- Rekap status unit (klik kartu -> daftar kendaraan) --}}
+        <x-card title="Rekap Kendaraan per Status">
+            <div class="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
+                @php
+                    $warnaStatus = [
+                        'emerald' => ['border' => 'border-emerald-500', 'bg' => 'bg-emerald-50', 'num' => 'text-emerald-700'],
+                        'amber'   => ['border' => 'border-amber-400',   'bg' => 'bg-amber-50',   'num' => 'text-amber-700'],
+                        'red'     => ['border' => 'border-red-500',     'bg' => 'bg-red-50',     'num' => 'text-red-700'],
+                        'gray'    => ['border' => 'border-slate-400',   'bg' => 'bg-slate-50',   'num' => 'text-slate-700'],
+                        'purple'  => ['border' => 'border-purple-400',  'bg' => 'bg-purple-50',  'num' => 'text-purple-700'],
+                        'blue'    => ['border' => 'border-blue-400',    'bg' => 'bg-blue-50',    'num' => 'text-blue-700'],
+                        'orange'  => ['border' => 'border-orange-400',  'bg' => 'bg-orange-50',  'num' => 'text-orange-700'],
+                        'teal'    => ['border' => 'border-teal-400',    'bg' => 'bg-teal-50',    'num' => 'text-teal-700'],
+                        'slate'   => ['border' => 'border-slate-400',   'bg' => 'bg-slate-50',   'num' => 'text-slate-700'],
+                        'indigo'  => ['border' => 'border-indigo-400',  'bg' => 'bg-indigo-50',  'num' => 'text-indigo-700'],
+                    ];
+                @endphp
+                @foreach ($rekapStatus as $st)
+                    @php $w = $warnaStatus[$st->warna_badge] ?? $warnaStatus['slate']; @endphp
+                    <a href="{{ route('kendaraan.index', ['status_id' => $st->id]) }}"
+                       class="group rounded-2xl border-l-4 {{ $w['border'] }} {{ $w['bg'] }} p-4 shadow-sm transition hover:shadow-md">
+                        <div class="text-3xl font-bold {{ $w['num'] }}">{{ $st->kendaraan_count }}</div>
+                        <div class="mt-1 text-sm font-semibold text-slate-700">{{ $st->nama }}</div>
+                    </a>
+                @endforeach
+            </div>
+        </x-card>
 
         {{-- Rekap Jatuh Tempo (klik kartu -> daftar kendaraan) --}}
         <x-card title="Rekap Jatuh Tempo (PKB & STNK)">

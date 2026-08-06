@@ -66,7 +66,21 @@ class DashboardService
             'pkb_lewat' => $byPkb['LEWAT'] ?? 0,
             'stnk_lewat' => $this->hitungMonitoring('stnk', $opdId)['LEWAT'] ?? 0,
             'status_labels' => $statusLabels,
+            'status_aktif_id' => StatusKendaraan::where('kode', 'aktif')->value('id'),
         ];
+    }
+
+    /**
+     * Rekap kendaraan per status unit (status_kendaraan) untuk kartu rekap.
+     *
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
+     */
+    public function rekapStatus(?int $opdId = null, int $perPage = 12): LengthAwarePaginator
+    {
+        return StatusKendaraan::query()
+            ->withCount(['kendaraan' => fn ($q) => $this->scopeOpd($q, $opdId)])
+            ->orderBy('id')
+            ->paginate($perPage);
     }
 
     /**

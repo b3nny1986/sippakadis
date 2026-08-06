@@ -8,7 +8,7 @@
                        class="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:ring-2 focus:ring-brand-200 focus:outline-none">
             </div>
 
-            @if ($isAdmin)
+            @if (!$isOpd)
                 <div>
                     <label class="mb-1 block text-xs font-medium text-slate-500">OPD</label>
                     <select name="opd_id" class="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none">
@@ -54,7 +54,7 @@
                 <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wider text-slate-500">
                     <tr>
                         <th class="px-4 py-3 text-left">NOPOL</th>
-                        @if ($isAdmin)<th class="px-4 py-3 text-left">OPD</th>@endif
+                        @if (!$isOpd)<th class="px-4 py-3 text-left">OPD</th>@endif
                         <th class="px-4 py-3 text-left">Merk / Tipe</th>
                         <th class="px-4 py-3 text-left">Tahun</th>
                         <th class="px-4 py-3 text-left">Status</th>
@@ -67,7 +67,7 @@
                     @forelse ($kendaraan as $k)
                         <tr class="hover:bg-slate-50">
                             <td class="px-4 py-3 font-semibold text-brand-700">{{ $k->nopol }}</td>
-                            @if ($isAdmin)<td class="px-4 py-3 text-slate-600">{{ $k->opd?->nama }}</td>@endif
+                            @if (!$isOpd)<td class="px-4 py-3 text-slate-600">{{ $k->opd?->nama }}</td>@endif
                             <td class="px-4 py-3 text-slate-700">{{ $k->merk ?? '-' }} {{ $k->tipe }}</td>
                             <td class="px-4 py-3 text-slate-600">{{ $k->tahun ?? '-' }}</td>
                             <td class="px-4 py-3">
@@ -95,13 +95,13 @@
                             </td>
                             <td class="px-4 py-3 text-right">
                                 <a href="{{ route('kendaraan.show', $k) }}" class="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-200">
-                                    Detail
+                                    @auth Detail @else Login Detail @endauth
                                 </a>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="{{ $isAdmin ? 8 : 7 }}" class="px-4 py-10 text-center text-slate-400">
+                            <td colspan="{{ $isOpd ? 7 : 8 }}" class="px-4 py-10 text-center text-slate-400">
                                 Tidak ada data kendaraan.
                             </td>
                         </tr>
