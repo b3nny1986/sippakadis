@@ -19,4 +19,4 @@ jobs:
         run: npm i -g vercel
 
       - name: Deploy to production
-        run: vercel --prod --yes --token="${{ secrets.VERCEL_TOKEN }}"
+        run: vercel --prod --yes --token="${{ secrets.VERCEL_TOKEN }}" --scope=bennys-projects-d311e98f

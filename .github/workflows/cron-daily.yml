@@ -12,6 +12,6 @@ jobs:
     steps:
       - name: Panggil endpoint /cron/daily
         run: |
-          curl -fsS -X POST "${{ secrets.PROD_URL }}/cron/daily" \
+          curl -fsS -X POST "https://sippakadis.vercel.app/cron/daily" \
             -H "Authorization: Bearer ${{ secrets.CRON_TOKEN }}" \
             -H "Content-Type: application/json"

@@ -6,7 +6,7 @@
 
 | | |
 |---|---|
-| Produksi | https://sipakadis.vercel.app |
+| Produksi | https://sippakadis.vercel.app |
 | Email | `admin@sippakadis.test` |
 | Password | `password` |
 
@@ -67,7 +67,7 @@ Buka `http://127.0.0.1:8000`.
 Tidak ada cron OS di Vercel, sehingga scheduler dieksekusi lewat endpoint yang dipanggil GitHub Actions setiap hari (`.github/workflows/cron-daily.yml`):
 
 ```bash
-curl -X POST https://sipakadis.vercel.app/cron/daily \
+curl -X POST https://sippakadis.vercel.app/cron/daily \
   -H "Authorization: Bearer <CRON_TOKEN>"
 ```
 
