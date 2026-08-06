@@ -20,7 +20,7 @@ class StatusKendaraanSeeder extends Seeder
             ['kode' => 'dipinjamkan', 'nama' => 'Dipinjamkan', 'warna_badge' => 'teal'],
             ['kode' => 'tidak-beroperasi', 'nama' => 'Tidak Beroperasi', 'warna_badge' => 'slate'],
             ['kode' => 'mutasi', 'nama' => 'Mutasi', 'warna_badge' => 'indigo'],
-            ['kode' => 'lain-lain', 'nama' => 'Lain-lain', 'warna_badge' => 'gray'],
+            ['kode' => 'lain-lain', 'nama' => 'Tidak Diketahui Keberadaannya', 'warna_badge' => 'gray'],
         ];
 
         foreach ($statuses as $status) {
