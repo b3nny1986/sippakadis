@@ -42,7 +42,14 @@ class LoginController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard'));
+        $role = $user->role?->name ?? '';
+        $opd = $user->opd?->nama;
+
+        $pesan = $opd
+            ? "Login berhasil sebagai {$user->name} — {$role} ({$opd})."
+            : "Login berhasil sebagai {$user->name} ({$role}).";
+
+        return redirect()->intended(route('dashboard'))->with('status', $pesan);
     }
 
     public function logout(): RedirectResponse

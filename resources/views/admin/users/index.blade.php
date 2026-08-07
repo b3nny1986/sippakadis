@@ -10,6 +10,12 @@
                         <option value="{{ $role->id }}" @selected(request('role_id') == $role->id)>{{ $role->name }}</option>
                     @endforeach
                 </select>
+                <select name="opd_id" class="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none">
+                    <option value="">Semua OPD</option>
+                    @foreach ($daftarOpd as $opd)
+                        <option value="{{ $opd->id }}" @selected(request('opd_id') == $opd->id)>{{ $opd->nama }}</option>
+                    @endforeach
+                </select>
                 <button type="submit" class="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700">Filter</button>
             </form>
             <a href="{{ route('admin.users.create') }}" class="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700">+ Tambah Pengguna</a>

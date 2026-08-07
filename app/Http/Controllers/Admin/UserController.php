@@ -19,6 +19,7 @@ class UserController extends Controller
         $users = User::query()
             ->with('role', 'opd')
             ->when($request->filled('role_id'), fn ($q) => $q->where('role_id', $request->integer('role_id')))
+            ->when($request->filled('opd_id'), fn ($q) => $q->where('opd_id', $request->integer('opd_id')))
             ->when($request->filled('cari'), fn ($q) => $q->where('name', 'ilike', '%' . $request->string('cari') . '%')
                 ->orWhere('email', 'ilike', '%' . $request->string('cari') . '%'))
             ->latest()
@@ -28,6 +29,7 @@ class UserController extends Controller
         return view('admin.users.index', [
             'users' => $users,
             'roles' => Role::orderBy('id')->get(),
+            'daftarOpd' => Opd::orderBy('nama')->get(),
         ]);
     }
 
