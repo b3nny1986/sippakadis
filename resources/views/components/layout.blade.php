@@ -72,7 +72,7 @@
                     <div class="flex items-center justify-between gap-2 text-sm">
                         <div class="min-w-0">
                             <p class="truncate font-semibold">{{ $user->name }}</p>
-                            <p class="truncate text-[11px] text-brand-300">{{ $user->opd?->nama ?? $user->role?->nama }}</p>
+                            <p class="truncate text-[11px] text-brand-300">{{ $user->opd?->nama ?? $user->role?->name }}</p>
                         </div>
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf

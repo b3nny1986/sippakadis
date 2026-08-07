@@ -7,7 +7,7 @@
                 <select name="role_id" class="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none">
                     <option value="">Semua Role</option>
                     @foreach ($roles as $role)
-                        <option value="{{ $role->id }}" @selected(request('role_id') == $role->id)>{{ $role->nama }}</option>
+                        <option value="{{ $role->id }}" @selected(request('role_id') == $role->id)>{{ $role->name }}</option>
                     @endforeach
                 </select>
                 <button type="submit" class="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700">Filter</button>
@@ -33,7 +33,7 @@
                         <tr class="hover:bg-slate-50">
                             <td class="px-4 py-3 font-semibold text-slate-800">{{ $user->name }}</td>
                             <td class="px-4 py-3 text-slate-600">{{ $user->email }}</td>
-                            <td class="px-4 py-3"><x-badge>{{ $user->role?->nama }}</x-badge></td>
+                            <td class="px-4 py-3"><x-badge>{{ $user->role?->name }}</x-badge></td>
                             <td class="px-4 py-3 text-slate-600">{{ $user->opd?->nama ?? '-' }}</td>
                             <td class="px-4 py-3">
                                 @if ($user->is_active)
