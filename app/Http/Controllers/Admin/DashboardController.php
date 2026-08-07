@@ -4,11 +4,12 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Services\DashboardService;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
 class DashboardController extends Controller
 {
-    public function index(DashboardService $service): Response
+    public function index(Request $request, DashboardService $service): Response
     {
         $user = auth()->user();
 
@@ -16,9 +17,12 @@ class DashboardController extends Controller
         // melihat seluruh data dan diperlakukan bukan admin.
         $scopeOpd = $user?->role?->slug === 'opd' ? $user->opd_id : null;
 
+        $sort = $request->string('sort', 'jumlah_desc')->toString();
+
         // Instrumentasi timing (muncul di Vercel Logs via LOG_CHANNEL=stderr).
         $t0 = microtime(true);
         $data = $service->dataDashboard($scopeOpd);
+        $data['rekapPerOpd'] = $service->rekapPerOpd($scopeOpd, 15, $sort);
         $dataMs = round((microtime(true) - $t0) * 1000);
 
         $t1 = microtime(true);

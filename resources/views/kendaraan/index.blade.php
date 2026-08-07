@@ -40,6 +40,24 @@
                 </select>
             </div>
 
+            <div>
+                <label class="mb-1 block text-xs font-medium text-slate-500">Urutkan</label>
+                <select name="sort" class="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none">
+                    <option value="updated_desc" @selected(request('sort', 'updated_desc') === 'updated_desc')>Terbaru Diubah</option>
+                    <option value="nopol_asc" @selected(request('sort') === 'nopol_asc')>NOPOL (A-Z)</option>
+                    <option value="nopol_desc" @selected(request('sort') === 'nopol_desc')>NOPOL (Z-A)</option>
+                    <option value="tahun_desc" @selected(request('sort') === 'tahun_desc')>Tahun (Terbaru)</option>
+                    <option value="tahun_asc" @selected(request('sort') === 'tahun_asc')>Tahun (Terlama)</option>
+                    <option value="pkb_asc" @selected(request('sort') === 'pkb_asc')>Masa Berlaku PKB (Terdekat)</option>
+                    <option value="pkb_desc" @selected(request('sort') === 'pkb_desc')>Masa Berlaku PKB (Terjauh)</option>
+                    <option value="stnk_asc" @selected(request('sort') === 'stnk_asc')>Masa Berlaku STNK (Terdekat)</option>
+                    <option value="stnk_desc" @selected(request('sort') === 'stnk_desc')>Masa Berlaku STNK (Terjauh)</option>
+                    @if (!$isOpd)
+                        <option value="opd_asc" @selected(request('sort') === 'opd_asc')>OPD (A-Z)</option>
+                    @endif
+                </select>
+            </div>
+
             <button type="submit" class="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700">
                 Filter
             </button>

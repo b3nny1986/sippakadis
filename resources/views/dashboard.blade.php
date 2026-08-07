@@ -84,6 +84,21 @@
 
         {{-- Rekap per OPD (klik baris -> daftar kendaraan) --}}
         <x-card title="Rekap Kendaraan per OPD">
+            <div class="mb-4 flex items-center justify-end">
+                <form method="GET" action="{{ route('dashboard') }}" class="flex items-center gap-2">
+                    <label for="sort-rekap" class="text-xs font-medium text-slate-500">Urutkan</label>
+                    <select id="sort-rekap" name="sort" onchange="this.form.submit()"
+                            class="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none">
+                        <option value="jumlah_desc" @selected(request('sort', 'jumlah_desc') === 'jumlah_desc')>Total Kendaraan (Terbanyak)</option>
+                        <option value="jumlah_asc" @selected(request('sort') === 'jumlah_asc')>Total Kendaraan (Tersedikit)</option>
+                        <option value="nama_asc" @selected(request('sort') === 'nama_asc')>Nama OPD (A-Z)</option>
+                        <option value="nama_desc" @selected(request('sort') === 'nama_desc')>Nama OPD (Z-A)</option>
+                        <option value="lewat_desc" @selected(request('sort') === 'lewat_desc')>Lewat Jatuh Tempo (Terbanyak)</option>
+                        <option value="lewat_asc" @selected(request('sort') === 'lewat_asc')>Lewat Jatuh Tempo (Tersedikit)</option>
+                    </select>
+                </form>
+            </div>
+
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-slate-200 text-sm">
                     <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wider text-slate-500">

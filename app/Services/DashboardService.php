@@ -44,7 +44,6 @@ class DashboardService
                 'ringkasan' => $this->ringkasan($opdId),
                 'rekapMonitoring' => $this->rekapMonitoring($opdId),
                 'rekapStatus' => $this->rekapStatus($opdId),
-                'rekapPerOpd' => $this->rekapPerOpd($opdId),
                 'perStatus' => $this->kendaraanPerStatus($opdId),
                 'perOpd' => $this->kendaraanPerOpd($opdId),
                 'rekapJatuhTempo' => $this->rekapJatuhTempo($opdId),
@@ -342,15 +341,30 @@ class DashboardService
     /**
      * Rekap per OPD (ter-paginasi): total kendaraan dan jumlah yang lewat
      * jatuh tempo. Untuk role OPD hanya berisi OPD-nya sendiri.
+     *
+     * Tidak ikut di-cache di dataDashboard() agar urutan & halaman bisa
+     * diatur pengguna tanpa memengaruhi paket agregasi dashboard.
+     *
+     * @param  'jumlah_desc'|'jumlah_asc'|'nama_asc'|'nama_desc'|'lewat_desc'|'lewat_asc'  $sort
      */
-    public function rekapPerOpd(?int $opdId = null, int $perPage = 15): LengthAwarePaginator
+    public function rekapPerOpd(?int $opdId = null, int $perPage = 15, string $sort = 'jumlah_desc'): LengthAwarePaginator
     {
+        [$kolom, $arah] = match ($sort) {
+            'nama_asc' => ['nama', 'asc'],
+            'nama_desc' => ['nama', 'desc'],
+            'jumlah_asc' => ['kendaraan_count', 'asc'],
+            'lewat_asc' => ['lewat_count', 'asc'],
+            'lewat_desc' => ['lewat_count', 'desc'],
+            default => ['kendaraan_count', 'desc'],
+        };
+
         return Opd::query()
             ->when($opdId, fn ($q) => $q->where('id', $opdId))
             ->where('is_active', true)
             ->withCount('kendaraan')
             ->withCount(['kendaraan as lewat_count' => fn ($q) => $q->jatuhTempo('LEWAT')])
-            ->orderByDesc('kendaraan_count')
+            ->orderBy($kolom, $arah)
+            ->orderBy('nama')
             ->paginate($perPage);
     }
 

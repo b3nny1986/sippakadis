@@ -41,8 +41,23 @@ class KendaraanController extends Controller
             })
             ->when($request->filled('status_monitoring'), fn ($q) => $q->jatuhTempo($request->string('status_monitoring')));
 
+        [$kolomSort, $arahSort] = match ($request->string('sort', 'updated_desc')->toString()) {
+            'nopol_asc' => ['nopol', 'asc'],
+            'nopol_desc' => ['nopol', 'desc'],
+            'tahun_desc' => ['tahun', 'desc'],
+            'tahun_asc' => ['tahun', 'asc'],
+            'pkb_asc' => ['masa_berlaku_pkb', 'asc'],
+            'pkb_desc' => ['masa_berlaku_pkb', 'desc'],
+            'stnk_asc' => ['masa_berlaku_stnk', 'asc'],
+            'stnk_desc' => ['masa_berlaku_stnk', 'desc'],
+            'opd_asc' => [Opd::select('nama')->whereColumn('opd.id', 'kendaraan.opd_id'), 'asc'],
+            default => ['updated_at', 'desc'],
+        };
+
+        $query->orderBy($kolomSort, $arahSort);
+
         return view('kendaraan.index', [
-            'kendaraan' => $query->latest('updated_at')->paginate(25)->withQueryString(),
+            'kendaraan' => $query->paginate(25)->withQueryString(),
             'daftarOpd' => Opd::orderBy('nama')->get(),
             'daftarStatus' => StatusKendaraan::orderBy('id')->get(),
             'isAdmin' => (bool) ($user?->role?->slug === 'admin'),
