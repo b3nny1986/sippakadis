@@ -1,7 +1,7 @@
 <x-layout title="{{ $user->exists ? 'Edit Pengguna' : 'Tambah Pengguna' }}">
     <div class="mx-auto max-w-2xl">
         <x-card title="{{ $user->exists ? 'Edit Pengguna' : 'Tambah Pengguna' }}">
-            <form method="POST" action="{{ $user->exists ? route('admin.users.update', $user) : route('admin.users.store') }}" class="space-y-4">
+            <form method="POST" action="{{ $user->exists ? route('admin.users.update', $user) : route('admin.users.store') }}" class="space-y-4" x-data="{ roleId: {{ old('role_id', $user->role_id ?? 1) }} }">
                 @csrf
                 @if ($user->exists) @method('PUT') @endif
 
@@ -11,7 +11,7 @@
 
                 <div>
                     <label class="mb-1 block text-sm font-medium text-slate-700">Role</label>
-                    <select name="role_id" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none">
+                    <select name="role_id" x-model.number="roleId" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none">
                         @foreach ($roles as $role)
                             <option value="{{ $role->id }}">{{ $role->name }}</option>
                         @endforeach
@@ -19,7 +19,7 @@
                     @error('role_id')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                 </div>
 
-                <div>
+                <div x-show="roleId === {{ $opdRoleId ?? $roles->firstWhere('slug','opd')?->id }}" x-cloak>
                     <label class="mb-1 block text-sm font-medium text-slate-700">OPD</label>
                     <select name="opd_id" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none">
                         <option value="">-- Pilih OPD --</option>
