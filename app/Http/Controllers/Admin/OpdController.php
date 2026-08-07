@@ -8,6 +8,7 @@ use App\Models\Opd;
 use App\Services\AuditLogService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class OpdController extends Controller
@@ -31,7 +32,13 @@ class OpdController extends Controller
 
     public function store(OpdRequest $request, AuditLogService $audit): RedirectResponse
     {
-        $opd = Opd::create($request->validated());
+        $data = $request->validated();
+
+        if (blank($data['kode'])) {
+            $data['kode'] = $this->generateKode($data['nama']);
+        }
+
+        $opd = Opd::create($data);
 
         $audit->log('opd.create', 'Opd', $opd->id, "Tambah OPD {$opd->nama}");
 
@@ -46,7 +53,13 @@ class OpdController extends Controller
 
     public function update(OpdRequest $request, Opd $opd, AuditLogService $audit): RedirectResponse
     {
-        $opd->update($request->validated());
+        $data = $request->validated();
+
+        if (blank($data['kode'])) {
+            unset($data['kode']);
+        }
+
+        $opd->update($data);
 
         $audit->log('opd.update', 'Opd', $opd->id, "Update OPD {$opd->nama}");
 
@@ -63,5 +76,20 @@ class OpdController extends Controller
         $opd->delete();
 
         return back()->with('status', 'OPD berhasil dihapus.');
+    }
+
+    private function generateKode(string $nama): string
+    {
+        $base = mb_substr('OPD-' . Str::slug($nama, '-'), 0, 50);
+
+        $kode = $base;
+        $suffix = 2;
+
+        while (Opd::where('kode', $kode)->exists()) {
+            $kode = mb_substr($base, 0, 50 - strlen((string) $suffix)) . $suffix;
+            $suffix++;
+        }
+
+        return $kode;
     }
 }

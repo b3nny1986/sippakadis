@@ -17,7 +17,7 @@ class OpdRequest extends FormRequest
         $opdId = $this->route('opd')?->id;
 
         return [
-            'kode' => ['required', 'string', 'max:50', Rule::unique('opd', 'kode')->ignore($opdId)],
+            'kode' => ['nullable', 'string', 'max:50', Rule::unique('opd', 'kode')->ignore($opdId)],
             'nama' => ['required', 'string', 'max:255', Rule::unique('opd', 'nama')->ignore($opdId)],
             'alamat' => ['nullable', 'string', 'max:500'],
             'email' => ['nullable', 'email', 'max:255'],
