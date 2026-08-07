@@ -7,6 +7,7 @@ use App\Models\HistoriScraping;
 use App\Models\Kendaraan;
 use App\Models\LogSinkronisasi;
 use App\Services\AuditLogService;
+use App\Services\ImportCsvService;
 use App\Services\SimpatorService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -112,6 +113,49 @@ class SinkronisasiController extends Controller
             $hasil[HistoriScraping::DITEMUKAN],
             $hasil[HistoriScraping::TIDAK_DITEMUKAN],
             $hasil[HistoriScraping::GAGAL]
+        ));
+    }
+
+    public function upload(Request $request, ImportCsvService $importer, AuditLogService $audit): RedirectResponse
+    {
+        $request->validate([
+            'file' => ['required', 'file', 'mimes:csv,txt', 'max:10240'],
+        ]);
+
+        try {
+            $hasil = $importer->updateMasaPkb($request->file('file')->getRealPath(), auth()->id());
+        } catch (\Throwable $e) {
+            return back()->with('error', 'Gagal memproses CSV: ' . $e->getMessage());
+        }
+
+        $audit->log('sinkronisasi.upload', 'Sinkronisasi', null, sprintf(
+            'Upload CSV update masa PKB: total=%d, diperbarui=%d, tidak ditemukan=%d, tidak cocok=%d, gagal=%d',
+            $hasil['total'],
+            $hasil['diperbarui'],
+            $hasil['tidak_ditemukan'],
+            $hasil['tidak_cocok'],
+            $hasil['gagal']
+        ));
+
+        if ($hasil['gagal'] > 0 || $hasil['tidak_ditemukan'] > 0 || $hasil['tidak_cocok'] > 0) {
+            $detail = collect(array_slice($hasil['errors'], 0, 20))
+                ->map(fn ($e) => "[{$e['nopol']}] {$e['pesan']}")
+                ->implode('; ');
+
+            return back()->with('error', sprintf(
+                'CSV diproses: %d diperbarui, %d tidak ditemukan, %d tidak cocok, %d gagal.%s',
+                $hasil['diperbarui'],
+                $hasil['tidak_ditemukan'],
+                $hasil['tidak_cocok'],
+                $hasil['gagal'],
+                $detail !== '' ? ' ' . $detail : ''
+            ));
+        }
+
+        return back()->with('status', sprintf(
+            'CSV berhasil diproses: %d dari %d kendaraan diperbarui masa PKB/STNK-nya.',
+            $hasil['diperbarui'],
+            $hasil['total']
         ));
     }
 }

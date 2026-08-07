@@ -15,6 +15,24 @@
             </div>
         </div>
 
+        <form method="POST" action="{{ route('admin.sinkronisasi.upload') }}" enctype="multipart/form-data" class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm" onsubmit="this.querySelector('button[type=submit]').disabled = true; this.querySelector('button[type=submit]').textContent = 'Memproses...'">
+            @csrf
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <div class="min-w-0 flex-1">
+                    <p class="text-sm font-semibold text-slate-800">Upload CSV Update Masa PKB</p>
+                    <p class="mt-0.5 text-xs text-slate-500">Unggah file CSV untuk memperbarui masa berlaku PKB/STNK secara massal. Kolom: <span class="font-mono text-slate-700">NO POLISI</span> (wajib), <span class="font-mono text-slate-700">AKHIR_PKB</span>, <span class="font-mono text-slate-700">AKHIR_STNK</span>, <span class="font-mono text-slate-700">NO RANGKA</span> (opsional, untuk verifikasi). Format tanggal <span class="font-mono text-slate-700">MM/DD/YYYY</span>. Nopol yang tidak ditemukan di sistem akan dilewati &amp; dilaporkan.</p>
+                </div>
+                <div class="flex flex-wrap items-center gap-3">
+                    <input type="file" name="file" accept=".csv,.txt" required
+                           class="block w-full max-w-xs text-sm text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-100 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-slate-700 hover:file:bg-slate-200">
+                    <button type="submit" class="rounded-lg bg-brand-600 px-5 py-2 text-sm font-semibold text-white hover:bg-brand-700">Upload &amp; Proses</button>
+                </div>
+            </div>
+            @error('file')
+                <p class="mt-2 text-xs text-red-600">{{ $message }}</p>
+            @enderror
+        </form>
+
         <form method="POST" action="{{ route('admin.sinkronisasi.jalankan') }}" id="form-sinkronisasi-manual">
             @csrf
             <input type="hidden" name="manual" value="1">
