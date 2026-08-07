@@ -44,9 +44,6 @@ class Kendaraan extends Model
         'nilai_pkb',
         'nilai_swdkllj',
         'sumber_data',
-        'is_verifikasi',
-        'verified_by',
-        'verified_at',
         'keterangan',
     ];
 
@@ -56,8 +53,6 @@ class Kendaraan extends Model
             'tahun' => 'integer',
             'masa_berlaku_pkb' => 'date',
             'masa_berlaku_stnk' => 'date',
-            'is_verifikasi' => 'boolean',
-            'verified_at' => 'datetime',
             'nilai_pkb' => 'decimal:2',
             'nilai_swdkllj' => 'decimal:2',
         ];
@@ -80,11 +75,6 @@ class Kendaraan extends Model
     public function status(): BelongsTo
     {
         return $this->belongsTo(StatusKendaraan::class, 'status_id');
-    }
-
-    public function verifikator(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'verified_by');
     }
 
     public function pengajuanPenetapan(): HasMany
@@ -132,11 +122,6 @@ class Kendaraan extends Model
     public function scopeForOpd(Builder $query, int $opdId): Builder
     {
         return $query->where('kendaraan.opd_id', $opdId);
-    }
-
-    public function scopeMenungguVerifikasi(Builder $query): Builder
-    {
-        return $query->where('is_verifikasi', false);
     }
 
     /**

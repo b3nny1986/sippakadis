@@ -23,11 +23,6 @@ class KendaraanPolicy
         return $user->role?->slug === 'admin';
     }
 
-    public function verifikasi(User $user, Kendaraan $kendaraan): bool
-    {
-        return $user->role?->slug === 'admin';
-    }
-
     public function sinkronisasi(User $user, Kendaraan $kendaraan): bool
     {
         return $user->role?->slug === 'admin';

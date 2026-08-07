@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Kendaraan;
 use App\Models\Opd;
 use App\Models\PengajuanPenetapan;
+use App\Models\PerubahanStatus;
 use App\Models\StatusKendaraan;
 use App\Support\Monitoring;
 use Carbon\CarbonImmutable;
@@ -80,7 +81,6 @@ class DashboardService
         $rows = $this->ambilBarisMonitoring($opdId);
 
         $totalKendaraan = $rows->count();
-        $menungguVerifikasi = $rows->where('is_verifikasi', false)->count();
         $statusCounts = $rows->countBy('status_id');
 
         $hitungStatus = function (array $kode) use ($statusKodeId, $statusCounts): int {
@@ -104,6 +104,11 @@ class DashboardService
             ->where('status', PengajuanPenetapan::MENUNGGU)
             ->count();
 
+        $menungguVerifikasi = PerubahanStatus::query()
+            ->when($opdId, fn ($q) => $q->whereHas('kendaraan', fn ($k) => $k->where('opd_id', $opdId)))
+            ->where('status', PerubahanStatus::MENUNGGU)
+            ->count();
+
         return [
             'total_kendaraan' => $totalKendaraan,
             'total_opd' => Opd::where('is_active', true)->count(),
@@ -117,9 +122,6 @@ class DashboardService
             'pengajuan_menunggu' => $pengajuanMenunggu,
             'pkb_h30' => $monitoring['byPkb']['H30'] ?? 0,
             'pkb_h14' => $monitoring['byPkb']['H14'] ?? 0,
-            'pkb_h7' => $monitoring['byPkb']['H7'] ?? 0,
-            'pkb_h1' => $monitoring['byPkb']['H1'] ?? 0,
-            'pkb_harin_h' => $monitoring['byPkb']['HARI_H'] ?? 0,
             'pkb_lewat' => $monitoring['byPkb']['LEWAT'] ?? 0,
             'stnk_lewat' => $monitoring['byStnk']['LEWAT'] ?? 0,
             'status_labels' => $statusLabels,
@@ -363,7 +365,7 @@ class DashboardService
     {
         return Kendaraan::query()
             ->tap(fn ($q) => $this->scopeOpd($q, $opdId))
-            ->select(['status_id', 'is_verifikasi', 'masa_berlaku_pkb', 'masa_berlaku_stnk'])
+            ->select(['status_id', 'masa_berlaku_pkb', 'masa_berlaku_stnk'])
             ->get();
     }
 

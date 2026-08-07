@@ -84,7 +84,6 @@ class ImportCsvService
                         'masa_berlaku_stnk' => $this->parseDate($row['AKHIR_STNK'] ?? null),
                         'keterangan' => $this->clean($row['KETERANGAN'] ?? null),
                         'sumber_data' => Kendaraan::SUMBER_CSV,
-                        'is_verifikasi' => false,
                     ];
 
                     $kendaraan = Kendaraan::where('nopol', $nopol)->first();

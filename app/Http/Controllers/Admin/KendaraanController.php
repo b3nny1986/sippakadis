@@ -28,7 +28,6 @@ class KendaraanController extends Controller
         $query->when($request->filled('opd_id'), fn ($q) => $q->where('opd_id', $request->integer('opd_id')))
             ->when($request->filled('status_id'), fn ($q) => $q->where('status_id', $request->integer('status_id')))
             ->when($request->filled('jenis_id'), fn ($q) => $q->where('jenis_id', $request->integer('jenis_id')))
-            ->when($request->boolean('verifikasi'), fn ($q) => $q->menungguVerifikasi())
             ->when($request->filled('cari'), function ($q) use ($request) {
                 $term = trim($request->string('cari'));
                 $q->where(function ($sub) use ($term) {
@@ -57,7 +56,7 @@ class KendaraanController extends Controller
 
         return view('kendaraan.show', [
             'kendaraan' => $kendaraan->load([
-                'opd', 'status', 'jenis', 'verifikator', 'pengajuanPenetapan',
+                'opd', 'status', 'jenis', 'pengajuanPenetapan',
                 'perubahanStatus.statusLama', 'perubahanStatus.statusBaru',
             ]),
             'isAdmin' => auth()->user()->role?->slug === 'admin',
@@ -90,19 +89,6 @@ class KendaraanController extends Controller
 
         return redirect()->route('admin.kendaraan.show', $kendaraan)
             ->with('status', 'Data kendaraan berhasil diperbarui.');
-    }
-
-    public function verifikasi(Request $request, Kendaraan $kendaraan, AuditLogService $audit): RedirectResponse
-    {
-        $kendaraan->update([
-            'is_verifikasi' => true,
-            'verified_by' => auth()->id(),
-            'verified_at' => now(),
-        ]);
-
-        $audit->log('kendaraan.verifikasi', 'Kendaraan', $kendaraan->id, "Verifikasi kendaraan {$kendaraan->nopol}");
-
-        return back()->with('status', 'Kendaraan berhasil diverifikasi.');
     }
 
     public function sinkronisasi(Request $request, Kendaraan $kendaraan, SimpatorService $simpator, AuditLogService $audit): RedirectResponse

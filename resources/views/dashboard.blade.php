@@ -17,13 +17,12 @@
             </a>
         </div>
 
-        <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
-            <a href="{{ route('kendaraan.index', ['status_monitoring' => 'H7']) }}" class="block transition hover:opacity-90">
-                <x-kpi label="PKB H-7 ke Bawah" :value="$ringkasan['pkb_h7'] + $ringkasan['pkb_h1'] + $ringkasan['pkb_harin_h']" icon="clock" tone="amber" />
-            </a>
-            <a href="{{ route('kendaraan.index', ['verifikasi' => 1]) }}" class="block transition hover:opacity-90">
-                <x-kpi label="Menunggu Verifikasi" :value="$ringkasan['menunggu_verifikasi']" icon="shield" tone="amber" />
-            </a>
+        <div class="grid grid-cols-2 gap-4 {{ $isAdmin ? 'lg:grid-cols-3' : '' }}">
+            @if ($isAdmin)
+                <a href="{{ route('admin.perubahan-status.index', ['status' => 'Menunggu']) }}" class="block transition hover:opacity-90">
+                    <x-kpi label="Menunggu Verifikasi" :value="$ringkasan['menunggu_verifikasi']" icon="shield" tone="amber" />
+                </a>
+            @endif
             <a href="{{ route('admin.penetapan.index') }}" class="block transition hover:opacity-90">
                 <x-kpi label="Pengajuan Menunggu" :value="$ringkasan['pengajuan_menunggu']" icon="document" tone="sky" />
             </a>

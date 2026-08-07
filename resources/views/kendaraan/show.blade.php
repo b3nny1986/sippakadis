@@ -13,12 +13,6 @@
                         @csrf
                         <button type="submit" class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Sinkronisasi Simpator</button>
                     </form>
-                    @if (! $kendaraan->is_verifikasi)
-                        <form method="POST" action="{{ route('admin.kendaraan.verifikasi', $kendaraan) }}">
-                            @csrf
-                            <button type="submit" class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700">Verifikasi</button>
-                        </form>
-                    @endif
                 @else
                     <a href="{{ route('opd.pengajuan.create') }}" class="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700">Ajukan Penetapan</a>
                 @endif
@@ -39,7 +33,6 @@
                     <x-dl-item label="Warna" :value="$kendaraan->warna" />
                     <x-dl-item label="Lokasi" :value="$kendaraan->lokasi" />
                     <x-dl-item label="Status" :value="$kendaraan->status?->nama" />
-                    <x-dl-item label="Verifikasi" :value="$kendaraan->is_verifikasi ? 'Sudah (' . ($kendaraan->verified_at?->format('d-m-Y') ?? '-') . ')' : 'Belum'" />
                     <x-dl-item label="Sumber Data" :value="strtoupper($kendaraan->sumber_data)" />
                 </dl>
             </x-card>

@@ -69,10 +69,9 @@ Route::middleware(['auth', 'user.active'])->group(function () {
         Route::resource('users', UserController::class)->except(['show']);
         Route::resource('opd', OpdController::class)->except(['show']);
 
-        // Kendaraan CRUD + verifikasi + sinkronisasi on-demand
+        // Kendaraan CRUD + sinkronisasi on-demand
         Route::get('kendaraan/{kendaraan}/edit', [AdminKendaraanController::class, 'edit'])->name('kendaraan.edit');
         Route::put('kendaraan/{kendaraan}', [AdminKendaraanController::class, 'update'])->name('kendaraan.update');
-        Route::post('kendaraan/{kendaraan}/verifikasi', [AdminKendaraanController::class, 'verifikasi'])->name('kendaraan.verifikasi');
         Route::post('kendaraan/{kendaraan}/sinkronisasi', [AdminKendaraanController::class, 'sinkronisasi'])->name('kendaraan.sinkronisasi');
 
         // Sinkronisasi massal Simpator
