@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Scopes\OpdScope;
 use App\Support\Monitoring;
 use App\Support\NopolParser;
 use Carbon\CarbonImmutable;
@@ -14,6 +15,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Kendaraan extends Model
 {
     use HasFactory;
+
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new OpdScope);
+    }
 
     protected $table = 'kendaraan';
 
