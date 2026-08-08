@@ -21,8 +21,8 @@ class DataManualController extends Controller
     public function index(): View
     {
         $kendaraan = Kendaraan::query()
-            ->where('sumber_data', Kendaraan::SUMBER_MANUAL)
             ->with(['opd', 'jenis', 'status'])
+            ->when(request('sumber'), fn ($q, $sumber) => $q->where('sumber_data', $sumber))
             ->when(request('cari'), function ($q, $cari) {
                 $q->where(function ($q2) use ($cari) {
                     $q2->where('nopol', 'like', "%{$cari}%")
@@ -67,19 +67,15 @@ class DataManualController extends Controller
 
     public function edit(Kendaraan $kendaraan): View
     {
-        abort_if($kendaraan->sumber_data !== Kendaraan::SUMBER_MANUAL, 404);
-
         return $this->formView($kendaraan);
     }
 
     public function update(DataManualRequest $request, Kendaraan $kendaraan): RedirectResponse
     {
-        abort_if($kendaraan->sumber_data !== Kendaraan::SUMBER_MANUAL, 404);
-
         $lama = $kendaraan->toArray();
         $kendaraan->update($this->dataForm($request->validated()));
 
-        $this->audit->log('data-manual.update', 'Kendaraan', $kendaraan->id, "Ubah kendaraan manual {$kendaraan->nopol}", $lama, $kendaraan->toArray());
+        $this->audit->log('data-manual.update', 'Kendaraan', $kendaraan->id, "Ubah kendaraan {$kendaraan->nopol}", $lama, $kendaraan->toArray());
 
         return redirect()
             ->route('admin.data-manual.index')
@@ -88,9 +84,7 @@ class DataManualController extends Controller
 
     public function destroy(Kendaraan $kendaraan): RedirectResponse
     {
-        abort_if($kendaraan->sumber_data !== Kendaraan::SUMBER_MANUAL, 404);
-
-        $this->audit->log('data-manual.destroy', 'Kendaraan', $kendaraan->id, "Hapus kendaraan manual {$kendaraan->nopol}", $kendaraan->toArray(), null);
+        $this->audit->log('data-manual.destroy', 'Kendaraan', $kendaraan->id, "Hapus kendaraan {$kendaraan->nopol} (sumber {$kendaraan->sumber_data})", $kendaraan->toArray(), null);
         $kendaraan->delete();
 
         return redirect()

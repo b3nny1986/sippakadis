@@ -1,7 +1,7 @@
 <x-layout title="Data Manual">
     <div class="space-y-4">
         <div class="flex flex-wrap items-center justify-between gap-3">
-            <p class="text-sm text-slate-500">Kelola kendaraan sumber <span class="font-semibold text-slate-700">manual</span> (bukan dari import CSV / Simpator).</p>
+            <p class="text-sm text-slate-500">Kelola seluruh data kendaraan (<span class="font-semibold text-slate-700">master CSV</span>, <span class="font-semibold text-slate-700">manual</span>, dan <span class="font-semibold text-slate-700">Simpator</span>).</p>
             <a href="{{ route('admin.data-manual.create') }}" class="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700">Tambah Data</a>
         </div>
 
@@ -10,6 +10,15 @@
                 <label class="mb-1 block text-xs font-medium text-slate-500">Cari</label>
                 <input type="text" name="cari" value="{{ request('cari') }}" placeholder="NOPOL / NOPOL Lama / Pemilik / No. Rangka / No. Mesin / Merk"
                        class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:ring-2 focus:ring-brand-200 focus:outline-none">
+            </div>
+            <div>
+                <label class="mb-1 block text-xs font-medium text-slate-500">Sumber</label>
+                <select name="sumber" class="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none">
+                    <option value="">Semua</option>
+                    <option value="csv" @selected(request('sumber') === 'csv')>CSV (Master)</option>
+                    <option value="manual" @selected(request('sumber') === 'manual')>Manual</option>
+                    <option value="simpator" @selected(request('sumber') === 'simpator')>Simpator</option>
+                </select>
             </div>
             <div>
                 <label class="mb-1 block text-xs font-medium text-slate-500">OPD</label>
@@ -51,6 +60,7 @@
                             <th class="px-4 py-3 text-left">Akhir STNK</th>
                             <th class="px-4 py-3 text-left">Lokasi</th>
                             <th class="px-4 py-3 text-left">Status</th>
+                            <th class="px-4 py-3 text-left">Sumber</th>
                             <th class="px-4 py-3 text-right">Aksi</th>
                         </tr>
                     </thead>
@@ -89,6 +99,17 @@
                                     </span>
                                 </td>
                                 <td class="px-4 py-2.5">
+                                    @php
+                                        $sumberBadge = match ($k->sumber_data) {
+                                            'csv' => 'bg-sky-100 text-sky-700 ring-sky-600/20',
+                                            'simpator' => 'bg-violet-100 text-violet-700 ring-violet-600/20',
+                                            'manual' => 'bg-amber-100 text-amber-700 ring-amber-600/20',
+                                            default => 'bg-slate-100 text-slate-500 ring-slate-600/20',
+                                        };
+                                    @endphp
+                                    <span class="inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold ring-1 {{ $sumberBadge }}">{{ $k->sumber_data ?? '-' }}</span>
+                                </td>
+                                <td class="px-4 py-2.5">
                                     <div class="flex items-center justify-end gap-2">
                                         <a href="{{ route('admin.data-manual.edit', $k) }}" class="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50">Edit</a>
                                         <form method="POST" action="{{ route('admin.data-manual.destroy', $k) }}" onsubmit="return confirm('Hapus kendaraan {{ $k->nopol }}? Data terkait (penetapan, perubahan status, notifikasi) ikut terhapus.')">
@@ -100,7 +121,7 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="15" class="px-4 py-10 text-center text-slate-400">Belum ada data manual. Klik "Tambah Data" untuk membuat kendaraan pertama.</td></tr>
+                            <tr><td colspan="16" class="px-4 py-10 text-center text-slate-400">Tidak ada data kendaraan. Klik "Tambah Data" untuk membuat kendaraan pertama.</td></tr>
                         @endforelse
                     </tbody>
                 </table>
