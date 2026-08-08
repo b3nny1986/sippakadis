@@ -33,19 +33,48 @@ class SinkronisasiController extends Controller
 
         $today = now()->toDateString();
 
+        $sort = $request->string('sort', 'sinkron_dulu')->toString();
+
         $kendaraan = Kendaraan::query()
             ->with(['opd', 'status'])
             ->whereNotNull('nopol')
             ->whereIn('sumber_data', [Kendaraan::SUMBER_CSV, Kendaraan::SUMBER_MANUAL])
-            ->withCount('historiScraping')
-            ->orderBy('histori_scraping_count')
-            ->orderBy('id')
-            ->paginate(100)
-            ->withQueryString();
+            ->withCount('historiScraping');
+
+        match ($sort) {
+            'belum_dulu' => $kendaraan
+                ->orderBy('histori_scraping_count')
+                ->orderBy('id'),
+            'nopol_asc' => $kendaraan
+                ->orderBy('nopol')
+                ->orderBy('id'),
+            'nopol_desc' => $kendaraan
+                ->orderByDesc('nopol')
+                ->orderBy('id'),
+            'pkb_asc' => $kendaraan
+                ->orderByRaw('masa_berlaku_pkb IS NULL')
+                ->orderBy('masa_berlaku_pkb')
+                ->orderBy('id'),
+            'pkb_desc' => $kendaraan
+                ->orderByRaw('masa_berlaku_pkb IS NULL')
+                ->orderByDesc('masa_berlaku_pkb')
+                ->orderBy('id'),
+            'sinkron_terbaru' => $kendaraan->orderByRaw(
+                '(SELECT created_at FROM histori_scraping WHERE histori_scraping.kendaraan_id = kendaraan.id ORDER BY created_at DESC LIMIT 1) DESC NULLS LAST'
+            )->orderBy('id'),
+            default => $kendaraan->orderByDesc(
+                HistoriScraping::query()
+                    ->selectRaw('count(*)')
+                    ->whereColumn('histori_scraping.kendaraan_id', 'kendaraan.id')
+            )->orderBy('id'),
+        };
+
+        $kendaraan = $kendaraan->paginate(100)->withQueryString();
 
         return view('admin.sinkronisasi.index', [
             'logs' => $logs,
             'kendaraan' => $kendaraan,
+            'sort' => $sort,
             'riwayatHariIni' => LogSinkronisasi::whereDate('created_at', $today)->count(),
             'berhasilHariIni' => LogSinkronisasi::whereDate('created_at', $today)
                 ->where('status', LogSinkronisasi::DITEMUKAN)->count(),

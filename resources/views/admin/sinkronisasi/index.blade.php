@@ -34,6 +34,23 @@
             @enderror
         </form>
 
+        <div class="flex items-center justify-end">
+            <form method="GET" class="flex items-center gap-2" onchange="this.submit()">
+                <label class="text-xs font-medium text-slate-500">Urutkan</label>
+                <select name="sort" class="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none">
+                    <option value="sinkron_dulu" @selected(($sort ?? 'sinkron_dulu') === 'sinkron_dulu')>Sudah sinkron dulu</option>
+                    <option value="belum_dulu" @selected(($sort ?? '') === 'belum_dulu')>Belum diskrap dulu</option>
+                    <option value="nopol_asc" @selected(($sort ?? '') === 'nopol_asc')>NOPOL A-Z</option>
+                    <option value="nopol_desc" @selected(($sort ?? '') === 'nopol_desc')>NOPOL Z-A</option>
+                    <option value="pkb_asc" @selected(($sort ?? '') === 'pkb_asc')>Masa PKB terdekat</option>
+                    <option value="pkb_desc" @selected(($sort ?? '') === 'pkb_desc')>Masa PKB terjauh</option>
+                    <option value="sinkron_terbaru" @selected(($sort ?? '') === 'sinkron_terbaru')>Terakhir disinkronkan</option>
+                </select>
+                <input type="hidden" name="cari" value="{{ request('cari') }}">
+                <input type="hidden" name="status" value="{{ request('status') }}">
+            </form>
+        </div>
+
         <form method="POST" action="{{ route('admin.sinkronisasi.jalankan') }}" id="form-sinkronisasi-manual">
             @csrf
             <input type="hidden" name="manual" value="1">
@@ -71,7 +88,14 @@
                                     <td class="px-4 py-2.5">
                                         <input type="checkbox" name="kendaraan_ids[]" value="{{ $k->id }}" class="cek-nopol h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500">
                                     </td>
-                                    <td class="px-4 py-2.5 font-semibold text-brand-700">{{ $k->nopol }}</td>
+                                    <td class="px-4 py-2.5 font-semibold text-brand-700">
+                                        {{ $k->nopol }}
+                                        @if ($k->histori_scraping_count > 0)
+                                            <span class="ml-1 inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 ring-1 ring-emerald-600/20">&#10003; Sudah Sinkron</span>
+                                        @else
+                                            <span class="ml-1 inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-500">Belum</span>
+                                        @endif
+                                    </td>
                                     <td class="px-4 py-2.5">
                                         @if ($k->masa_berlaku_pkb)
                                             <span class="font-mono text-sm font-medium {{ $k->pkb_status === 'LEWAT' ? 'text-red-600' : 'text-slate-700' }}">{{ $k->masa_berlaku_pkb->format('d-m-Y') }}</span>
