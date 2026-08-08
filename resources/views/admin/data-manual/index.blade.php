@@ -105,7 +105,18 @@
                     <tbody class="divide-y divide-slate-100">
                         @forelse ($kendaraan as $k)
                             <tr class="hover:bg-slate-50">
-                                <td class="px-4 py-2.5 font-semibold text-brand-700">{{ $k->nopol }}</td>
+                                <td class="px-4 py-2.5">
+                                    <div class="flex items-center gap-2">
+                                        <form method="POST" action="{{ route('admin.kendaraan.sinkronisasi', $k) }}" class="shrink-0" onsubmit="this.querySelector('button').disabled = true; this.querySelector('button').textContent = '...'">
+                                            @csrf
+                                            <button type="submit" title="Sinkronisasi ke Simpator: {{ $k->nopol }}" class="inline-flex items-center gap-1 rounded-lg border border-slate-300 px-2 py-1 text-xs font-semibold text-slate-600 hover:bg-brand-50 hover:text-brand-700">
+                                                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v6h6M20 20v-6h-6M4 10a8 8 0 0114-4.4M20 14a8 8 0 01-14 4.4"/></svg>
+                                                Sinkron
+                                            </button>
+                                        </form>
+                                        <span class="font-semibold text-brand-700">{{ $k->nopol }}</span>
+                                    </div>
+                                </td>
                                 <td class="px-4 py-2.5 text-slate-500">{{ $k->nopol_lama ?? '-' }}</td>
                                 <td class="px-4 py-2.5 text-slate-600">{{ $k->opd?->nama }}</td>
                                 <td class="px-4 py-2.5 text-slate-600">{{ $k->nama_pemilik ?? '-' }}</td>
