@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\DataManualController;
 use App\Http\Controllers\Admin\KendaraanController as AdminKendaraanController;
 use App\Http\Controllers\Admin\LaporanController;
 use App\Http\Controllers\Admin\LogController;
@@ -68,6 +69,7 @@ Route::middleware(['auth', 'user.active'])->group(function () {
     Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
         Route::resource('users', UserController::class)->except(['show']);
         Route::resource('opd', OpdController::class)->except(['show']);
+        Route::resource('data-manual', DataManualController::class)->except(['show'])->parameters(['data-manual' => 'kendaraan']);
 
         // Kendaraan CRUD + sinkronisasi on-demand
         Route::get('kendaraan/{kendaraan}/edit', [AdminKendaraanController::class, 'edit'])->name('kendaraan.edit');

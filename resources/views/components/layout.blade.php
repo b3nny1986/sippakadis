@@ -52,6 +52,7 @@
                     <p class="px-3 pt-5 pb-2 text-[11px] font-semibold uppercase tracking-wider text-brand-400">Administrasi</p>
                     <x-nav-link :href="route('admin.users.index')" :active="request()->routeIs('admin.users.*')" icon="users">Pengguna</x-nav-link>
                     <x-nav-link :href="route('admin.opd.index')" :active="request()->routeIs('admin.opd.*')" icon="building">OPD</x-nav-link>
+                    <x-nav-link :href="route('admin.data-manual.index')" :active="request()->routeIs('admin.data-manual.*')" icon="pencil">Data Manual</x-nav-link>
                     <x-nav-link :href="route('admin.penetapan.index')" :active="request()->routeIs('admin.penetapan.*')" icon="document">Penetapan</x-nav-link>
                     <x-nav-link :href="route('admin.perubahan-status.index')" :active="request()->routeIs('admin.perubahan-status.*')" icon="refresh">Perubahan Status</x-nav-link>
                     <x-nav-link :href="route('admin.sinkronisasi.index')" :active="request()->routeIs('admin.sinkronisasi.*')" icon="sync">Sinkronisasi</x-nav-link>
