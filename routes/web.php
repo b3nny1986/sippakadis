@@ -69,6 +69,7 @@ Route::middleware(['auth', 'user.active'])->group(function () {
     Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
         Route::resource('users', UserController::class)->except(['show']);
         Route::resource('opd', OpdController::class)->except(['show']);
+        Route::get('data-manual/download', [DataManualController::class, 'download'])->name('data-manual.download');
         Route::resource('data-manual', DataManualController::class)->except(['show'])->parameters(['data-manual' => 'kendaraan']);
 
         // Kendaraan CRUD + sinkronisasi on-demand

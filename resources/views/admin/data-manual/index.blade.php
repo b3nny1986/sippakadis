@@ -5,6 +5,44 @@
             <a href="{{ route('admin.data-manual.create') }}" class="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700">Tambah Data</a>
         </div>
 
+        <form method="GET" action="{{ route('admin.data-manual.download') }}" class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div class="flex flex-wrap items-end gap-3">
+                <div>
+                    <label class="mb-1 block text-xs font-medium text-slate-500">OPD</label>
+                    <select name="opd_id" class="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none">
+                        <option value="">Semua</option>
+                        @foreach ($daftarOpd as $opd)
+                            <option value="{{ $opd->id }}" @selected(request('opd_id') == $opd->id)>{{ $opd->nama }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="mb-1 block text-xs font-medium text-slate-500">Status Kendaraan</label>
+                    <select name="status_id" class="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none">
+                        <option value="">Semua</option>
+                        @foreach ($daftarStatus as $st)
+                            <option value="{{ $st->id }}" @selected(request('status_id') == $st->id)>{{ $st->nama }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="mb-1 block text-xs font-medium text-slate-500">Masa PKB</label>
+                    <select name="masa_pkb" class="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none">
+                        <option value="">Semua</option>
+                        @foreach (\App\Support\Monitoring::statuses() as $st)
+                            <option value="{{ $st }}" @selected(request('masa_pkb') == $st)>{{ $st }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <label class="flex cursor-pointer items-center gap-2 py-2 text-sm font-medium text-slate-700">
+                    <input type="checkbox" name="pilih_semua" value="1" @checked(request()->boolean('pilih_semua')) class="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500">
+                    Pilih Semua
+                </label>
+                <button type="submit" class="rounded-lg bg-brand-600 px-5 py-2 text-sm font-semibold text-white hover:bg-brand-700">Download Data Master</button>
+            </div>
+            <p class="mt-2 text-xs text-slate-500">Unduh CSV format master (MM/DD/YYYY) yang kompatibel untuk diimpor ulang. Centang "Pilih Semua" untuk mengunduh seluruh data tanpa filter.</p>
+        </form>
+
         <form method="GET" class="flex flex-wrap items-end gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
             <div class="min-w-56 flex-1">
                 <label class="mb-1 block text-xs font-medium text-slate-500">Cari</label>
