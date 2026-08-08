@@ -76,6 +76,7 @@ Route::middleware(['auth', 'user.active'])->group(function () {
 
         // Sinkronisasi massal Simpator
         Route::get('sinkronisasi', [SinkronisasiController::class, 'index'])->name('sinkronisasi.index');
+        Route::get('sinkronisasi/template', [SinkronisasiController::class, 'template'])->name('sinkronisasi.template');
         Route::post('sinkronisasi/jalankan', [SinkronisasiController::class, 'jalankan'])->name('sinkronisasi.jalankan');
         Route::post('sinkronisasi/upload', [SinkronisasiController::class, 'upload'])->name('sinkronisasi.upload');
 

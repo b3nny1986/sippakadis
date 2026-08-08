@@ -116,6 +116,21 @@ class SinkronisasiController extends Controller
         ));
     }
 
+    public function template(): \Illuminate\Http\Response
+    {
+        $stream = fopen('php://temp', 'r+');
+        fputcsv($stream, ['NO POLISI', 'NO RANGKA', 'AKHIR_PKB', 'AKHIR_STNK']);
+        fputcsv($stream, ['KTV 1001', 'MH4LX150GFJP05474', '31/12/2027', '31/12/2028']);
+        rewind($stream);
+        $csv = stream_get_contents($stream);
+        fclose($stream);
+
+        return response($csv, 200, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="template_update_pkb.csv"',
+        ]);
+    }
+
     public function upload(Request $request, ImportCsvService $importer, AuditLogService $audit): RedirectResponse
     {
         $request->validate([

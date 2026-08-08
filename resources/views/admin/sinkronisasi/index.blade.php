@@ -20,11 +20,12 @@
             <div class="flex flex-wrap items-center justify-between gap-3">
                 <div class="min-w-0 flex-1">
                     <p class="text-sm font-semibold text-slate-800">Upload CSV Update Masa PKB</p>
-                    <p class="mt-0.5 text-xs text-slate-500">Unggah file CSV untuk memperbarui masa berlaku PKB/STNK secara massal. Kolom: <span class="font-mono text-slate-700">NO POLISI</span> (wajib), <span class="font-mono text-slate-700">AKHIR_PKB</span>, <span class="font-mono text-slate-700">AKHIR_STNK</span>, <span class="font-mono text-slate-700">NO RANGKA</span> (opsional, untuk verifikasi). Format tanggal <span class="font-mono text-slate-700">MM/DD/YYYY</span>. Nopol yang tidak ditemukan di sistem akan dilewati &amp; dilaporkan.</p>
+                    <p class="mt-0.5 text-xs text-slate-500">Unggah file CSV untuk memperbarui masa berlaku PKB/STNK secara massal. Kolom: <span class="font-mono text-slate-700">NO POLISI</span> (wajib), <span class="font-mono text-slate-700">AKHIR_PKB</span>, <span class="font-mono text-slate-700">AKHIR_STNK</span>, <span class="font-mono text-slate-700">NO RANGKA</span> (opsional, untuk verifikasi). Format tanggal <span class="font-mono text-slate-700">DD/MM/YYYY</span>. Nopol yang tidak ditemukan di sistem akan dilewati &amp; dilaporkan.</p>
                 </div>
                 <div class="flex flex-wrap items-center gap-3">
                     <input type="file" name="file" accept=".csv,.txt" required
                            class="block w-full max-w-xs text-sm text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-100 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-slate-700 hover:file:bg-slate-200">
+                    <a href="{{ route('admin.sinkronisasi.template') }}" class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">Download Template</a>
                     <button type="submit" class="rounded-lg bg-brand-600 px-5 py-2 text-sm font-semibold text-white hover:bg-brand-700">Upload &amp; Proses</button>
                 </div>
             </div>
@@ -57,6 +58,7 @@
                             <tr>
                                 <th class="w-10 px-4 py-3"></th>
                                 <th class="px-4 py-3 text-left">NOPOL</th>
+                                <th class="px-4 py-3 text-left">Masa PKB</th>
                                 <th class="px-4 py-3 text-left">OPD</th>
                                 <th class="px-4 py-3 text-left">Kendaraan</th>
                                 <th class="px-4 py-3 text-left">Status PKB / STNK</th>
@@ -70,6 +72,13 @@
                                         <input type="checkbox" name="kendaraan_ids[]" value="{{ $k->id }}" class="cek-nopol h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500">
                                     </td>
                                     <td class="px-4 py-2.5 font-semibold text-brand-700">{{ $k->nopol }}</td>
+                                    <td class="px-4 py-2.5">
+                                        @if ($k->masa_berlaku_pkb)
+                                            <span class="font-mono text-sm font-medium {{ $k->pkb_status === 'LEWAT' ? 'text-red-600' : 'text-slate-700' }}">{{ $k->masa_berlaku_pkb->format('d-m-Y') }}</span>
+                                        @else
+                                            <span class="text-slate-400">-</span>
+                                        @endif
+                                    </td>
                                     <td class="px-4 py-2.5 text-slate-600">{{ $k->opd?->nama }}</td>
                                     <td class="px-4 py-2.5 text-slate-600">
                                         {{ $k->merk }} {{ $k->tipe }} <span class="text-slate-400">({{ $k->tahun ?? '-' }})</span>
@@ -83,7 +92,7 @@
                                     <td class="px-4 py-2.5 text-slate-500">{{ $k->histori_scraping_count }}x</td>
                                 </tr>
                             @empty
-                                <tr><td colspan="6" class="px-4 py-10 text-center text-slate-400">Tidak ada kendaraan dalam antrian sinkronisasi.</td></tr>
+                                <tr><td colspan="7" class="px-4 py-10 text-center text-slate-400">Tidak ada kendaraan dalam antrian sinkronisasi.</td></tr>
                             @endforelse
                         </tbody>
                     </table>

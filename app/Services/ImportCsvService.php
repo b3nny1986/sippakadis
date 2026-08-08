@@ -380,8 +380,9 @@ class ImportCsvService
     }
 
     /**
-     * Parsing tanggal fleksibel: MM/DD/YYYY (master), DD/MM/YYYY (bila hari > 12),
-     * Y-m-d, dan d-m-Y. Ambiguitas (kedua bagian <= 12) dianggap MM/DD/YYYY.
+     * Parsing tanggal fleksibel: DD/MM/YYYY (format template upload),
+     * MM/DD/YYYY (bila bulan > 12), Y-m-d, dan d-m-Y.
+     * Ambiguitas (kedua bagian <= 12) dianggap DD/MM/YYYY.
      */
     private function parseTanggal(?string $value): ?string
     {
@@ -410,8 +411,8 @@ class ImportCsvService
                 return sprintf('%04d-%02d-%02d', $y, $a, $b);
             }
 
-            if ($a <= 12 && $b <= 12 && checkdate($a, $b, $y)) {
-                return sprintf('%04d-%02d-%02d', $y, $a, $b);
+            if ($a <= 12 && $b <= 12 && checkdate($b, $a, $y)) {
+                return sprintf('%04d-%02d-%02d', $y, $b, $a);
             }
         }
 
